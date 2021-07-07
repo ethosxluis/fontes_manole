@@ -1,0 +1,504 @@
+#include "rwmake.ch"          
+#DEFINE OLESAVEASFILE   405
+#DEFINE WDFORMATPDF    "17" // Formato PDF
+
+//-------------------------------------------------------------------\\
+/*/{Protheus.doc} COMR001
+Imprimir pedido de compra, na forma de contrato de serviços
+@type function
+@author Claudio
+@since 29/12/2017
+@version 1.0
+@example U_COMR001()
+/*/
+//-------------------------------------------------------------------\\
+User Function COMR001()
+
+Local cAliasSC7 := GetNextAlias()
+Local cAliasZZC := GetNextAlias()
+Local cAliasZZE := GetNextAlias()
+Local cAliasAH1 := GetNextAlias()
+Local cAliasSB1 := GetNextAlias()
+Local aDescri   := {}
+Local aQuant    := {}
+Local aUM 	    := {}
+Local aPreco    := {}
+Local aTotal    := {}
+Local aAutores  := {}
+Local nAutores  := 0
+Local nItensPC  := 0
+Local nI	    := 0
+Local lWin 		:= file('c:\windows')
+Local cPathDot  := Iif(lwin,"C:\smartclient_P12\COMR001.dotm","/smartclient_p12/comr001.dotm")
+Local cPathFile := U_GetPathFile(RetCodUsr())
+Local cPedido   := SC7->C7_NUM
+Local cPDF      := ''
+Local cCNPJIE	:= ''
+//Local lISBN     := IIF(Empty(SC7->C7_XISBN),.F.,.T.)
+Local Essin101	:= ''
+Local Essin102	:= ''
+Local Essin103	:= ''
+Local Essin104	:= ''
+
+Local lISBN		:= .F.
+Local lManCurso := .F.
+
+Local aGrupos 	:=	UsrRetGrp(cUserName)		// Carrega os grupos do usuário
+Local cGrupCur	:=	SuperGetMV("MN_GRPCUR")		// Parametro que contem o grupo Manole Cursos
+Local nI := 0
+
+Private hWord
+//Private cPerg  := PADR("COMR001",10)
+
+/*ValidPerg(cPerg)  */      
+//Pergunte(cPerg,.T.)
+
+// ISNULL(CONVERT(VARCHAR(2047), CONVERT(VARBINARY(2047), SB1A.B1_XCONTR)),'') AS B1_XCONTR,
+
+For nI := 1 to Len(aGrupos)
+	If !aGrupos[nI] $ cGrupCur
+		lImprime	:= .F.
+	Else
+		lImprime	:= .T.
+		lManCurso	:= .T.			//Utilizado para impressão das assinaturas
+	EndIf
+Next nI
+
+If SC7->C7_XSTATUS = 'BLOQUEADO'  
+	If lImprime == .F.
+		MsgStop("Pedido bloqueado !")
+		Return	
+	EndIf
+EndIf
+
+If lWin == .F.
+	MsgStop("Impressão NÃO homologada para MAC's, favor imprimir no WINDOWS ! ")
+	Return
+EndIf
+
+
+//Inicio da montagem de impressão
+
+BeginSQL Alias cAliasSC7
+		
+	SELECT C7_FILIAL, C7_NUM, C7_EMISSAO, C7_PRODUTO, C7_XISBN, C7_DESCRI, C7_QUANT, C7_UM, C7_PRECO, C7_TOTAL,
+		   C7_DATPRF, C7_OBS, C7_COND, C7_USER, C7_XAULA, CASE C7_XTPREC WHEN 'B' THEN 'BRUTO' ELSE 'LÍQUIDO' END AS TIPOREC,
+		   SB1.B1_ISBN, SB1.B1_DESC, SB1.B1_VTTITUL, SB1.B1_XTIPO,
+		   E4_DESCRI,
+		   A2_TIPO, A2_NOME, A2_END, A2_CEP, A2_BAIRRO, A2_EST, A2_CGC, A2_PFISICA, A2_MUN, A2_INSCR, A2_EMAIL, 
+		   A2_BANCO, A2_AGENCIA, A2_XDIGAG, A2_NUMCON, A2_XDIGCC, A2_DTNASC, A2_XPIS
+	FROM  	 %Table:SC7% SC7 JOIN %Table:SB1% SB1A ON
+		   SB1A.B1_COD = C7_PRODUTO
+	   AND SB1A.B1_FILIAL  = C7_FILIAL	   
+	   AND SB1A.%notDel% JOIN %Table:SB1% SB1 ON
+		   SB1.B1_COD = C7_XISBN
+	   AND SB1.B1_FILIAL  = C7_FILIAL	
+	   AND SB1A.%notDel% JOIN %Table:SA2% SA2 ON
+		   A2_COD  = C7_FORNECE
+	   AND A2_LOJA = C7_LOJA
+	   AND SA2.%notDel% JOIN %Table:SE4% SE4 ON
+		   E4_CODIGO = C7_COND
+	   AND E4_FILIAL  = C7_FILIAL	   
+	   AND SE4.%notDel%   	    
+	WHERE  SC7.D_E_L_E_T_ = '' AND C7_NUM = %Exp:cPedido%
+EndSQL
+
+(cAliasSC7)->(DbGoTop())	
+
+While !Eof()
+	aAdd(aDescri , C7_DESCRI)
+	aAdd(aQuant  , Transform(C7_QUANT,"@E 999,999"))
+	aAdd(aUM     , C7_UM)
+	aAdd(aPreco  , Transform(C7_PRECO,"@E 999,999.99"))
+	aAdd(aTotal  , Transform(C7_TOTAL,"@E 999,999.99"))
+
+	nItensPC += 1
+	
+	xTipoSB1 := Posicione("SB1",1,xFilial("SB1")+(cAliasSC7)->C7_PRODUTO,"B1_XTIPO")
+
+	If xTipoSB1 = '1'
+		lISBN := .T.
+	EndIf
+	
+	DbSkip()
+EndDo
+
+If lISBN 	// Produção de livro
+
+	BeginSQL Alias cAliasAH1	
+		SELECT A2_NOME  
+		FROM   %Table:AH1% AH1 JOIN %Table:SA2% SA2 ON
+			   A2_COD = AH1_FORNEC
+		   AND SA2.%notDel% JOIN %Table:SC7% SC7 ON
+			   C7_XISBN = AH1_PRODUT
+		   AND C7_NUM   = %Exp:cPedido%
+		   AND SC7.%notDel%   	    
+		WHERE  AH1.%notDel% 
+	EndSQL
+	
+	(cAliasAH1)->(DbGoTop())	
+	
+	While !Eof()
+		aAdd(aAutores, A2_NOME)
+		nAutores += 1
+		DbSkip()
+	EndDo
+
+	(cAliasAH1)->(DbCloseArea())	
+	
+Else
+
+	BeginSQL Alias cAliasZZC	
+		/*
+		SELECT ZZB_NOME  
+		FROM   %Table:ZZC% ZZC JOIN %Table:ZZB% ZZB ON
+			   ZZB_COD = ZZC_EDITOR
+		   AND ZZB.%notDel% JOIN %Table:SC7% SC7 ON
+			   C7_XISBN = ZZC_PRODUT
+		   AND C7_NUM   = %Exp:cPedido%
+		   AND SC7.%notDel%   	    
+		WHERE  ZZC.D_E_L_E_T_ = ''
+		*/
+
+    	SELECT A2_NOME
+    	FROM %Table:ZZC% ZZC JOIN %Table:SA2% SA2 ON
+    		 ZZC_EDITOR = A2_COD AND
+    		 ZZC_LOJA = A2_LOJA AND
+    		 SA2.%notDel% JOIN %Table:SC7% SC7 ON
+    		 C7_XISBN = ZZC_PRODUT
+    		 AND C7_NUM = %Exp:cPedido%
+    		 AND SC7.%notDel% 
+    	WHERE ZZC.D_E_L_E_T_ = ' ' 
+    		 
+	EndSQL
+	
+	(cAliasZZC)->(DbGoTop())	
+	
+	While !Eof()
+		//aAdd(aAutores, ZZB_NOME)
+		aAdd(aAutores, A2_NOME)
+		nAutores += 1
+		DbSkip()
+	EndDo
+
+	(cAliasZZC)->(DbCloseArea())	
+
+	/*	
+	BeginSQL Alias cAliasZZE	
+		SELECT ZZD_NOME  
+		FROM   %Table:ZZE% ZZE JOIN %Table:ZZD% ZZD ON
+			   ZZD_COD = ZZE_COORD
+		   AND ZZD.%notDel% JOIN %Table:SC7% SC7 ON
+			   C7_XISBN = ZZE_PRODUT
+		   AND C7_NUM   = %Exp:cPedido%
+		   AND SC7.%notDel%   	    
+		WHERE  ZZE.D_E_L_E_T_ = '' 
+	EndSQL
+	*/
+
+	BeginSQL Alias cAliasZZE		
+	SELECT A2_NOME  
+		FROM   %Table:ZZE% ZZE JOIN %Table:SA2% SA2 ON
+			   A2_COD = ZZE_COORD
+           AND A2_LOJA = ZZE_LOJA
+		   AND SA2.%notDel% JOIN %Table:SC7% SC7 ON
+			   C7_XISBN = ZZE_PRODUT
+		   AND C7_NUM   = %Exp:cPedido%
+		   AND SC7.%notDel%   	    
+		WHERE  ZZE.D_E_L_E_T_ = ''    
+	EndSQL
+	
+	(cAliasZZE)->(DbGoTop())	
+	
+	While !Eof()
+		//aAdd(aAutores, ZZD_NOME)
+		aAdd(aAutores, A2_NOME)
+		nAutores += 1
+		DbSkip()
+	EndDo
+
+	(cAliasZZE)->(DbCloseArea())	
+
+Endif
+
+
+hWord := OLE_CreateLink()
+
+/*OLE_SetProperty( hWord, oleWdVisible,   .F. )       // seto a propriedade de visibilidade do word
+OLE_SetProperty( hWord, oleWdPrintBack, .T. )       // seto a propriedade de impressão (segundo plano .T. ou .F.)
+*/
+
+// Esta função inicializa uma nova instância de trabalho entre o Protheus SmnartClient
+// e o arquivo modelo (.dot) do pacote Microsoft Office).
+
+OLE_NewFile(hWord, cPathDot )
+
+// Define o conteúdo de uma variável presente no documento modelo (.dot)  
+// utilizado na integração Microsoft Office à partir do 
+// parâmetro recebido na sua chamada. (Atualiza a DocVariable do Office com uma variavel AdvPL).           
+
+(cAliasSC7)->(DbGoTop())	
+
+If (cAliasSC7)->A2_TIPO = 'F'
+	cCNPJIE := "CPF: " + Formatar('CPF',(cAliasSC7)->A2_CGC) + "          RG: " + Formatar('RG',(cAliasSC7)->A2_PFISICA)
+Else
+	cCNPJIE := "CNPJ: " + Formatar('CNPJ',(cAliasSC7)->A2_CGC) + "          IE: " + Formatar('IE',(cAliasSC7)->A2_INSCR)
+Endif
+
+OLE_SetDocumentVar(hWord, 'M0_NOMECOM', Alltrim(SM0->M0_NOMECOM))  
+OLE_SetDocumentVar(hWord, 'M0_ENDCOB' , Alltrim(SM0->M0_ENDCOB))  
+OLE_SetDocumentVar(hWord, 'M0_COMPLE' , Formatar('CEP',SM0->M0_CEPCOB)+" - "+Alltrim(SM0->M0_BAIRCOB)+" - "+Alltrim(SM0->M0_CIDCOB)+" - "+Alltrim(SM0->M0_ESTCOB))  
+OLE_SetDocumentVar(hWord, 'M0_CNPJIE' , "CNPJ: " + Formatar('CNPJ',SM0->M0_CGC) + "          IE: " + Formatar('IE',SM0->M0_INSC))  
+OLE_SetDocumentVar(hWord, 'M0_TEL'    , "Tel : " + SM0->M0_TEL)  
+
+OLE_SetDocumentVar(hWord, 'A2_NOME'  , Alltrim((cAliasSC7)->A2_NOME))  
+OLE_SetDocumentVar(hWord, 'A2_END'   , Alltrim((cAliasSC7)->A2_END))  
+OLE_SetDocumentVar(hWord, 'A2_COMPLE', Formatar('CEP',(cAliasSC7)->A2_CEP)+" - "+Alltrim((cAliasSC7)->A2_BAIRRO)+" - "+Alltrim((cAliasSC7)->A2_MUN)+" - "+Alltrim((cAliasSC7)->A2_EST))  
+OLE_SetDocumentVar(hWord, 'A2_CNPJIE', cCNPJIE)  
+OLE_SetDocumentVar(hWord, 'A2_EMAIL' , "e-Mail: "+Alltrim((cAliasSC7)->A2_EMAIL))  
+
+//Edmar Mendes do Prado
+//Acrescimo de campos de dados bancarios, data nascimento e PIS
+//28/01/2019 - Inicio
+
+OLE_SetDocumentVar(hWord, 'A2_BANCO' 	, "Banco: " + Alltrim((cAliasSC7)->A2_BANCO))
+OLE_SetDocumentVar(hWord, 'A2_AGENCIA' 	, "Agencia: " + Alltrim((cAliasSC7)->A2_AGENCIA))
+OLE_SetDocumentVar(hWord, 'A2_XDIGAG' 	, + Alltrim((cAliasSC7)->A2_XDIGAG))
+OLE_SetDocumentVar(hWord, 'A2_NUMCON' 	, "Conta: " + Alltrim((cAliasSC7)->A2_NUMCON))
+OLE_SetDocumentVar(hWord, 'A2_XDIGCC'	, + Alltrim((cAliasSC7)->A2_XDIGCC))
+
+OLE_SetDocumentVar(hWord, 'A2_DTNASC' 	, "Data Nasc: " + Alltrim((cAliasSC7)->A2_DTNASC))
+OLE_SetDocumentVar(hWord, 'A2_XPIS' 	, "Num PIS: " + Alltrim((cAliasSC7)->A2_XPIS))
+
+//28/01/2018 - Fim
+
+OLE_SetDocumentVar(hWord, 'C7_NUM'    , (cAliasSC7)->C7_NUM) 
+OLE_SetDocumentVar(hWord, 'C7_EMISSAO', STOD((cAliasSC7)->C7_EMISSAO))  
+
+//09/08/2019
+//Edmar Mendes do Prado
+//OLE_SetDocumentVar(hWord, 'B1_VTTITUL', Alltrim((cAliasSC7)->B1_VTTITUL))  
+OLE_SetDocumentVar(hWord, 'B1_DESC', Alltrim((cAliasSC7)->B1_DESC))
+
+If lISBN
+	
+	OLE_SetDocumentVar(hWord, 'nAutores', nAutores)  
+	
+	For nI := 1 to Len(aAutores)
+		OLE_SetDocumentVar(hWord,"ZZB_NOME"+AllTrim(Str(nI)), aAutores[nI])
+	Next
+	
+	OLE_ExecuteMacro(hWord,"Autores")
+
+EndIf
+
+OLE_SetDocumentVar(hWord, 'C7_XISBN'  , Alltrim((cAliasSC7)->C7_XISBN))  
+OLE_SetDocumentVar(hWord, 'USUARIO'   , UsrFullName((cAliasSC7)->C7_USER))  
+OLE_SetDocumentVar(hWord, 'E4_DESC'   , (cAliasSC7)->E4_DESCRI)  
+OLE_SetDocumentVar(hWord, 'C7_XTPREC' , (cAliasSC7)->TIPOREC)  
+
+OLE_SetDocumentVar(hWord, 'C7_DATPRF', STOD((cAliasSC7)->C7_DATPRF))  
+OLE_SetDocumentVar(hWord, 'C7_OBS'   , (cAliasSC7)->C7_OBS)
+  
+If !Empty((cAliasSC7)->C7_XAULA)
+	//OLE_SetDocumentVar(hWord, 'C7_XAULA' , 'Aula .................................:   '+(cAliasSC7)->C7_XAULA)  
+	OLE_SetDocumentVar(hWord, 'C7_XAULA' , (cAliasSC7)->C7_XAULA)
+Else
+	OLE_SetDocumentVar(hWord, 'C7_XAULA' , '')  
+Endif
+
+OLE_SetDocumentVar(hWord, 'B1A_XCONTR', Posicione("SB1",1,xFilial("SB1")+(cAliasSC7)->C7_PRODUTO,"B1_XCONTR"))  
+
+OLE_SetDocumentVar(hWord, 'nItensPC', nItensPC)  
+
+//variavel para identificar o numero total de linhas na parte variavel
+//Sera utilizado na macro do documento para execucao do for next
+
+//Montagem das variaveis dos itens. No documento word estas variaveis serao criadas dinamicamente da seguinte forma:
+// prt_cod1, prt_cod2 ... prt_cod10
+
+For nI := 1 to Len(aDescri)
+	OLE_SetDocumentVar(hWord,"C7_DESCRI"+AllTrim(Str(nI)), aDescri[nI])
+	OLE_SetDocumentVar(hWord,"C7_QUANT"+AllTrim(Str(nI)) , aQuant[nI])
+	OLE_SetDocumentVar(hWord,"C7_UM"+AllTrim(Str(nI))    , aUM[nI])
+	OLE_SetDocumentVar(hWord,"C7_PRECO"+AllTrim(Str(nI)) , aPreco[nI])
+	OLE_SetDocumentVar(hWord,"C7_TOTAL"+AllTrim(Str(nI)) , aTotal[nI])
+Next
+
+// Esta função executa uma macro, presente dentro de um arquivo modelo, 
+// relativo à integração com o Microsoft Office.
+
+OLE_ExecuteMacro(hWord,"ItensPC")
+
+If MsgYesNo("Assinatura MANOLE EDUCACAO ?")
+	OLE_SetDocumentVar(hWord, 'Essin101'   , 'CONTRATANTE: ')
+	OLE_SetDocumentVar(hWord, 'Essin102'   , 'Karin Gutz ')
+	OLE_SetDocumentVar(hWord, 'Essin103'   , 'Gestora de EAD - Manole Educação ')
+	OLE_SetDocumentVar(hWord, 'Essin104'   , "CNPJ: " + Formatar('CNPJ',SM0->M0_CGC))//'CNPJ: 62.351.341/0001-69 ')
+
+	OLE_SetDocumentVar(hWord, 'Essin201'   , 'CONTRATANTE: ')
+	OLE_SetDocumentVar(hWord, 'Essin202'   , 'Amarylis Manole ')
+	OLE_SetDocumentVar(hWord, 'Essin203'   , 'CEO ')
+	OLE_SetDocumentVar(hWord, 'Essin204'   , "CNPJ: " + Formatar('CNPJ',SM0->M0_CGC))//'CNPJ: 62.351.341/0001-69 ')
+
+	OLE_SetDocumentVar(hWord, 'Essin301'   , 'CONTRATADO: ')
+	OLE_SetDocumentVar(hWord, 'Essin302'   , Alltrim((cAliasSC7)->A2_NOME))
+	OLE_SetDocumentVar(hWord, 'Essin303'   , 'CPF/CGC: ' + Alltrim((cAliasSC7)->A2_CGC))
+	OLE_SetDocumentVar(hWord, 'Essin304'   , '')	
+
+	OLE_SetDocumentVar(hWord, 'Essin401'   , '')
+	OLE_SetDocumentVar(hWord, 'Essin402'   , '')
+	OLE_SetDocumentVar(hWord, 'Essin403'   , '')
+	OLE_SetDocumentVar(hWord, 'Essin404'   , '')
+	
+Else
+
+	OLE_SetDocumentVar(hWord, 'Essin101'   , '')
+	OLE_SetDocumentVar(hWord, 'Essin102'   , 'Cessionária: Editora Manole LTDA')
+	OLE_SetDocumentVar(hWord, 'Essin103'   , "CNPJ: " + Formatar('CNPJ',SM0->M0_CGC))//'CNPJ: 62.351.341/0001-69')
+	OLE_SetDocumentVar(hWord, 'Essin104'   , 'Amarylis Manole - CEO')
+
+	OLE_SetDocumentVar(hWord, 'Essin201'   , '')
+	OLE_SetDocumentVar(hWord, 'Essin202'   , 'Cedente: ')
+	OLE_SetDocumentVar(hWord, 'Essin203'   , '')
+	OLE_SetDocumentVar(hWord, 'Essin204'   , '')
+
+	OLE_SetDocumentVar(hWord, 'Essin301'   , '')
+	OLE_SetDocumentVar(hWord, 'Essin302'   , 'Solicitante: ')
+	OLE_SetDocumentVar(hWord, 'Essin303'   , '')
+	OLE_SetDocumentVar(hWord, 'Essin304'   , '')
+
+	OLE_SetDocumentVar(hWord, 'Essin401'   , '')
+	OLE_SetDocumentVar(hWord, 'Essin402'   , 'Testemunha: ')
+	OLE_SetDocumentVar(hWord, 'Essin403'   , '')
+	OLE_SetDocumentVar(hWord, 'Essin404'   , '')
+
+EndIf
+
+
+//OLE_SetDocumentVar(hWord, 'prt_totorc', Transform(nAuxTot,"@E 999,999,999.99"))
+            
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Atualizando as variaveis do documento do Word                         ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+// Atualiza todas as variáveis presentes no arquivo modelo, 
+// de acordo com seus conteúdos definidos por meio da função OLE_SetDocumentVar.
+// Recomenda-se a execução ao final da montagem dos atributos do arquivo modelo.
+
+OLE_UpdateFields(hWord)
+
+// Função AdvPL que executa a instrução de impressão do documento modelo
+// da aplicação Microsoft Office (arquivo .dot ou equivalente)
+
+If MsgYesNo("Confirma a impressão do contrato ?")
+//	If mv_par01 == 1
+		//ExecInClient(OLESAVEASFILE, { hWord, cPathFile + "CONTRATO_" + cPedido + ".pdf", "", "", "0", WDFORMATPDF } )
+		ExecInClient(OLESAVEASFILE, { hWord, cPathFile + "CONTRATO_" + cPedido + " - " + Alltrim((cAliasSC7)->A2_NOME) + ".pdf", "", "", "0", WDFORMATPDF } )
+			
+		OLE_CloseFile( hWord )
+		OLE_CloseLink( hWord )
+		
+		DbSelectArea("SC7")
+		
+		If lManCurso
+
+			If SC7->C7_XSTATUS = 'BLOQUEADO'
+				reclock("SC7",.F.)
+					SC7->C7_XSTATUS := "CONCLUIDO"
+				MsUnlock()
+			EndIf
+
+		Else
+
+			If SC7->C7_XSTATUS = 'LIBERADO'
+				reclock("SC7",.F.)
+					SC7->C7_XSTATUS := "IMPRESSO"
+				MsUnlock()
+			EndIf
+			
+			Alert("Contrato gravado com sucesso em " + cPathFile + "CONTRATO_" + cPedido + " - " + Alltrim((cAliasSC7)->A2_NOME) + ".pdf")
+			
+		EndIf
+//	Else
+//  		Ole_PrintFile(hWord,"ALL",,,1)
+//  	Endif
+EndIf
+
+// Finaliza a conexão entre o Protheus SmartClient e a aplicação MS-Office
+// (Word, Excel etc), para a impressão de conteúdos que utilizam 
+// a funcionalidade de integração entre o Microsiga Protheus e o pacote Microsoft Office.
+            
+/*If MsgYesNo("Fecha o Word e Corta o Link ?")
+      OLE_CloseFile( hWord )
+      OLE_CloseLink( hWord )
+Endif 
+*/
+
+OLE_CloseFile( hWord )
+OLE_CloseLink( hWord )
+      
+(cAliasSC7)->(DbCloseArea())	
+
+Return()
+//-------------------------------------------------------------------//
+/*/{Protheus.doc} Formatar
+Format campo para impressão no pedido de compras
+@type function
+@author Claudio
+@since 26/12/2017
+@version 1.0
+@param 	cTipo, character, Tipo do formato
+		cCampo, character, Campo que será formatado
+@return cRet
+@example
+Formatar(cTipo, cCampo)
+/*/
+//-------------------------------------------------------------------//
+
+Static Function Formatar(cTipo, cCampo)
+
+Local cRet := cCampo
+
+If cTipo = 'CPF'
+	cRet := SubStr(cCampo,1,3) + '.' + SubStr(cCampo,4,3) + '.' + SubStr(cCampo,7,3) + '-' + SubStr(cCampo,10,2) 
+ElseIf cTipo = 'RG'
+	cRet := SubStr(cCampo,1,3) + '.' + SubStr(cCampo,4,3) + '.' + SubStr(cCampo,7,3) + '-' + SubStr(cCampo,10,1) 
+ElseIf cTipo = 'CNPJ'
+	cRet := SubStr(cCampo,1,2) + '.' + SubStr(cCampo,3,3) + '.' + SubStr(cCampo,6,3) + '/' + SubStr(cCampo,9,4) + '-' + SubStr(cCampo,13,2) 
+ElseIf cTipo = 'IE'
+	If Alltrim(cCampo) <> "ISENTO"
+		cRet := SubStr(cCampo,1,3) + '.' + SubStr(cCampo,4,3) + '.' + SubStr(cCampo,7,3) + '.' + SubStr(cCampo,10,3) 
+	Endif
+ElseIf cTipo = 'CEP'
+	cRet := SubStr(cCampo,1,5) + '-' + SubStr(cCampo,6,3) 
+Endif
+
+Return cRet
+
+//-------------------------------------------------------------------//
+/*/{Protheus.doc} GetPathFile
+Retorna o caminho onde será gravado o arquivo
+@type function
+@author Claudio
+@since 26/04/2018
+@version 1.0
+@param 	cUsuario
+@return cRet
+@example
+GetPathFile(cUsuario)
+/*/
+//-------------------------------------------------------------------//
+User Function GetPathFile(cUsuario)
+
+Local aUsers := AllUsers()
+Local cRet   := ''
+Local nI     := 0
+
+For nI := 1 to Len(aUsers)
+	If cUsuario == aUsers[nI][1][1]
+		cRet := aUsers[nI][2][3]
+	Endif
+Next
+
+Return cRet

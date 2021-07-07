@@ -1,0 +1,35 @@
+#INCLUDE "PROTHEUS.CH"
+#include "apwebex.ch"
+
+User Function teste()
+Local cChave	:= " "
+Local cCodEmp	:= "01"
+Local cCodFil	:= "01"
+Local aTables	:= {"SC5","SC6","SA1","SA2","SB1"}
+Local cHtml		:= " "
+Local cQuery	:= ""
+private DT1		:= IIF(TYPE('HTTPPOST->DTINI') <> 'U',HTTPPOST->DTINI,'')
+private DT2		:= IIF(TYPE('HTTPPOST->DTFIM') <> 'U',HTTPPOST->DTFIM,'')
+Private nTot	:= 0 
+Private aRet	:= {}
+Private nFor := 1
+RPCSetType( 3 )
+RpcSetEnv ( cCodEmp, cCodFil,,,"CDA",, aTables )
+
+IF EMPTY(DT2)
+	cHtml		:= H_TESTE()
+ELSE
+	DT2 := DTOS(CTOD(DT2))
+	DT1 := IIF(EMPTY(DT1),"        ",DTOS(CTOD(DT1)))
+	cQuery := "SELECT A.C5_NUM, A1_NOME, SUM(C6_VALOR) AS TOTAL FROM "+RETSQLNAME("SC5")+" A, "+RETSQLNAME("SC6")+" B, "+RETSQLNAME("SB1")+" C, "+RETSQLNAME("SA1")+" D WHERE A.C5_NUM = B.C6_NUM AND B.C6_PRODUTO = C.B1_COD AND A.C5_CLIENTE  = D.A1_COD AND A.C5_LOJACLI = D.A1_LOJA AND D.D_E_L_E_T_ = ' ' AND D.A1_FILIAL = '"+xFilial("SA1")+"'  AND A.D_E_L_E_T_ = ' ' AND A.C5_FILIAL = '"+xFilial("SC6")+"'  AND B.D_E_L_E_T_ = ' ' AND B.C6_FILIAL = '"+xFilial("SC6")+"'  AND C.D_E_L_E_T_ = ' ' AND C.B1_FILIAL = '"+xFilial("SB1")+"' AND A.C5_EMISSAO BETWEEN '"+DT1+"' AND '"+DT2+"' group by A.C5_NUM, A1_NOME"
+	IIF(SELECT("TRB")>0,TRB->(DBCLOSEAREA()),NIL)
+	cQuery := ChangeQuery(cQuery)
+	dbUseArea( .T., "TOPCONN", TCGENQRY(,,cQuery),"TRB", .F., .T.) 
+	TRB->(DbEval({|x| aadd(aRet,{TRB->C5_NUM,TRB->A1_NOME,TRB->TOTAL}) }))
+	aeval(aRet,{|x| nTot += x[3]})
+	cHtml		:= H_TESTE()
+ENDIF
+
+
+RpcClearEnv()
+return(cHtml)

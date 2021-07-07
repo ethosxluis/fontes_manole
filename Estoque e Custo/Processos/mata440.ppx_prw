@@ -1,0 +1,1616 @@
+#line 1 "D:\Arquivos\Sistemas\Biblioteca\MATA440.CH"
+#line 2 "D:\Arquivos\Sistemas\Ethosx\manole\Estoque e Custo\Processos\mata440.prw"
+#line 1 "D:\Arquivos\Sistemas\Biblioteca\PROTHEUS.CH"
+#line 1 "D:\Arquivos\Sistemas\Biblioteca\Dialog.ch"
+#line 28 "PROTHEUS.CH"
+#line 1 "D:\Arquivos\Sistemas\Biblioteca\Font.ch"
+#line 29 "PROTHEUS.CH"
+#line 1 "D:\Arquivos\Sistemas\Biblioteca\PTMenu.ch"
+#line 31 "PROTHEUS.CH"
+#line 1 "D:\Arquivos\Sistemas\Biblioteca\Print.ch"
+#line 33 "PROTHEUS.CH"
+#line 1 "D:\Arquivos\Sistemas\Biblioteca\Colors.ch"
+#line 35 "PROTHEUS.CH"
+#line 1 "D:\Arquivos\Sistemas\Biblioteca\Folder.ch"
+#line 37 "PROTHEUS.CH"
+#line 1 "D:\Arquivos\Sistemas\Biblioteca\msobject.ch"
+#line 38 "PROTHEUS.CH"
+#line 1 "D:\Arquivos\Sistemas\Biblioteca\VKey.ch"
+#line 42 "PROTHEUS.CH"
+#line 1 "D:\Arquivos\Sistemas\Biblioteca\WinApi.ch"
+#line 44 "PROTHEUS.CH"
+#line 1 "D:\Arquivos\Sistemas\Biblioteca\FWCommand.ch"
+#line 47 "PROTHEUS.CH"
+#line 1 "D:\Arquivos\Sistemas\Biblioteca\FWCSS.CH"
+#line 50 "PROTHEUS.CH"
+#line 25 "D:\Arquivos\Sistemas\Ethosx\manole\Estoque e Custo\Processos\mata440.prw"
+Function Mata440()
+
+
+
+
+
+Local aCores := {{"Empty(C5_LIBEROK).And.Empty(C5_NOTA) .And. Empty(C5_BLQ)","ENABLE" },				{ "!Empty(C5_NOTA).Or.C5_LIBEROK=='E' .And. Empty(C5_BLQ)" ,"DISABLE"},				{ "!Empty(C5_LIBEROK).And.Empty(C5_NOTA).And. Empty(C5_BLQ)","BR_AMARELO"}, { "C5_BLQ == '1'","BR_AZUL"},				{ "C5_BLQ == '2'","BR_LARANJA"}}
+
+Local aIndexSC5  := {}
+Local cFiltraSC5 := ""
+
+PRIVATE aRotina := MenuDef()
+PRIVATE cCadastro := OemToAnsi("Libera‡„o de Pedidos de Venda")
+PRIVATE aArrayAE:={}
+PRIVATE bFiltraBrw := {|| Nil}
+
+If cPaisLoc <> "BRA"
+	Aadd(aCores,{})
+	Ains(aCores,1)
+	aCores[1] := {"AllTrim(C5_NOTA)=='REMITO'","BR_CINZA"}
+Endif
+
+AjustaHelp()
+
+
+
+
+Pergunte("MTA440", .F. )
+
+
+
+PRIVATE lTransf:=MV_PAR01==1
+
+
+
+PRIVATE lLiber :=MV_PAR02==1
+
+
+
+PRIVATE lSugere:=MV_PAR03==1
+
+
+
+
+
+
+SetKey(123,{||Pergunte("MTA440", .T. ), lTransf:=MV_PAR01==1, lLiber :=MV_PAR02==1, lSugere:=MV_PAR03==1})
+
+
+
+
+dbSelectArea("DAK")
+dbSelectArea("DAI")
+
+
+
+If ExistBlock("MA440COR")
+	aCores := ExecBlock("MA440COR", .F. , .F. ,aCores)
+Endif
+
+
+
+dbSelectArea("SC5")
+dbSetOrder(1)
+If ExistTemplate( "M440FIL" )
+	cFiltraSC5	:= ExecTemplate( "M440FIL", .F. , .F.  )
+EndIf
+If ExistBlock( "M440FIL" )
+	cFiltraSC5	:= ExecBlock( "M440FIL", .F. , .F.  )
+EndIf
+bFiltraBrw 	:= {|| FilBrowse("SC5",@aIndexSC5,@cFiltraSC5) }
+Eval(bFiltraBrw)
+
+
+
+mBrowse( 6, 1,22,75,"SC5",,,,,,aCores)
+
+
+
+EndFilBrw("SC5",aIndexSC5)
+
+
+
+dbSelectArea("SC5")
+dbSetOrder(1)
+dbClearFilter()
+SetKey(123,)
+
+Return( .T. )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function A440Libera(cAlias,nReg,nOpc)
+
+
+
+
+Local aArea     := GetArea()
+Local aPosObj   := {}
+Local aObjects  := {}
+Local aSize     := {}
+Local aPosGet   := {}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Local aCpos1    := { "C5_TRANSP ", "C5_REDESP ", "C5_FRETE  ", "C5_VOLUME1", "C5_VOLUME2", "C5_VOLUME3", "C5_VOLUME4", "C5_ESPECI1", "C5_ESPECI2", "C5_ESPECI3", "C5_ESPECI4", "C5_PESOL  ", "C5_PBRUTO ", "C5_MENNOTA", "C5_MENPAD ", "C5_DESPESA", "C5_SEGURO ", "C5_FRETAUT", "C5_RECFAUT", "C5_TPFRETE"}
+Local aCpos2    := {}
+Local aAddCpo   := {}
+Local aInfo     := {}
+Local bSetKey   := SetKey(123,Nil)
+Local nCntFor   := 0
+Local lContinua := .T. 
+Local lBloqueio := .T. 
+Local lGrade    := MaGrade()
+Local lQuery    := .F. 
+Local lNaoFatur := .F. 
+Local lFreeze   := (SuperGetMv("MV_PEDFREZ", .F. ,0) <> 0)
+Local nOpcA     := 0
+Local nLinGet   := 0
+Local nColFreeze:= SuperGetMv("MV_PEDFREZ", .F. ,0)
+Local cArqQry   := "SC6"
+Local cQuery    := ""
+Local oDlg
+Local oSay1
+Local oSay2
+Local oSay3
+Local oSay4
+Local oGetD
+
+Local bCond     := {|| .T.  }
+Local bAction1  := {|| Mta440Lib(cArqQry,@lBloqueio,@lNaoFatur,lGrade) }
+Local bAction2  := {|| .T.  }
+Local cSeek     := ""
+Local aNoFields := {"C6_NUM","C6_QTDEMP","C6_QTDENT"}
+Local bWhile    := {|| }
+Local nNumDec   := TamSX3("C6_VALOR")[2]
+Local lPvBlq  := .F. 
+
+PRIVATE aCols     := {}
+PRIVATE aHeader   := {}
+PRIVATE aTELA[0][0]
+PRIVATE aGETS[0]
+
+
+If !Empty(SC5->C5_PEDEXP)
+   If FindFunction("AvChkStDesp")
+      If !AvChkStDesp(SC5->C5_NUM)
+	     lContinua:= .F. 
+      EndIf
+   EndIf
+EndIf
+
+
+
+
+If cPaisLoc == "PTG"
+	aAdd(aCpos1,"C5_DESNTRB")
+	aAdd(aCpos1,"C5_TARA")
+Endif
+
+
+
+
+If FindFunction("MsMatGrade") .And.  IsAtNewGrd()
+
+
+
+
+
+
+
+
+
+	PRIVATE oGrade	  := MsMatGrade():New("oGrade",,"C6_QTDLIB",,"a410GValid()", { 	{115,{|| A440Saldo( .T. ,oGrade:aColsAux[oGrade:nPosLinO][aScan(oGrade:aHeadAux,{|x| AllTrim(x[2])=="C6_LOCAL"})])}} }, { 	{"C6_QTDVEN",NIL,NIL}, {"C6_QTDLIB",NIL,NIL},	  							{"C6_QTDENT",NIL,NIL}, {"C6_ITEM"	,NIL,NIL}, {"C6_UNSVEN",NIL,NIL}, {"C6_OPC",NIL,NIL}, {"C6_BLQ",NIL,NIL}})
+Else
+	PRIVATE aHeadGrade:= {}
+	PRIVATE aColsGrade:= {}
+EndIf
+
+
+If Type("oGrade") == "O" .And.  "MATA410" $ SuperGetMV("MV_GRDMULT", .F. ,"")
+	aAdd(oGrade:aCposCtrlGrd,{"C6_PRCVEN",NIL,NIL})
+	aAdd(oGrade:aCposCtrlGrd,{"C6_VALOR",NIL,NIL})
+	aAdd(oGrade:aCposCtrlGrd,{"C6_VALDESC",NIL,NIL})
+	aAdd(oGrade:aCposCtrlGrd,{"C6_DESCRI",NIL,NIL})
+	aAdd(oGrade:aCposCtrlGrd,{"C6_PRUNIT",NIL,NIL})
+EndIf
+
+
+
+
+ALTERA := .T. 
+
+
+
+
+aCpos2 := {"C6_QTDLIB ","C6_QTDLIB2","C6_NUMLOTE","C6_LOTECTL","C6_LOCALIZ","C6_NUMSERI"}
+If ( ExistBlock("MTA440AC") )
+	aAddCpo := ExecBlock("MTA440AC", .F. , .F. )
+	For nCntFor:= 1 To Len(aAddCpo)
+		AADD(aCpos2,aAddCpo[nCntFor])
+	next
+EndIf
+
+aAddCpo := {}
+
+If ( ExistBlock("MTA440C5") )
+	aAddCpo := ExecBlock("MTA440C5", .F. , .F. )
+	For nCntFor:= 1 To Len(aAddCpo)
+		AADD(aCpos1,aAddCpo[nCntFor])
+	next
+EndIf
+
+
+
+
+RegToMemory( "SC5", .F. , .F.  )
+
+
+
+If lContinua
+	If ExistBlock("MT440AT")
+		lContinua := ExecBlock("MT440AT", .F. , .F. )
+	EndIf
+EndIf
+
+
+
+If ( !SoftLock(cAlias) )
+	lContinua := .F. 
+EndIf
+
+If lContinua
+	lContinua := If(lGrade .And. MatOrigGrd()=="SB4",If(FindFunction("VldDocGrd"),VldDocGrd(1,SC5->C5_NUM), .T. ), .T. )
+EndIf
+
+
+
+
+If ( lContinua )
+	dbSelectArea("SC6")
+	dbSetOrder(1)
+
+		If TcSrvType()<>"AS/400" .And.  !InTransact() .And.  Ascan(aHeader,{|x| x[8] == "M"}) == 0
+			lQuery  := .T. 
+			cQuery := "SELECT SC6.*,SC6.R_E_C_N_O_ SC6RECNO "
+			cQuery += "FROM "+RetSqlName("SC6")+" SC6 "
+			cQuery += "WHERE SC6.C6_FILIAL='"+xFilial("SC6")+"' AND "
+			cQuery += "SC6.C6_NUM='"+SC5->C5_NUM+"' AND "
+			cQuery += "SC6.D_E_L_E_T_<>'*' "
+			cQuery += "ORDER BY "+SqlOrder(SC6->(IndexKey()))
+
+			dbSelectArea("SC6")
+			dbCloseArea()
+
+		EndIf
+
+	cSeek  := xFilial("SC6")+SC5->C5_NUM
+	bWhile := {|| C6_FILIAL+C6_NUM }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	FillGetDados(4,"SC6",1,cSeek,bWhile,{{bCond,bAction1,bAction2}},aNoFields,,,cQuery,,Inclui,,,{|| AfterCols(cArqQry) },,,"SC6")
+
+	If "MATA410" $ SuperGetMV("MV_GRDMULT", .F. ,"")
+		aCols := aColsGrade(oGrade,aCols,aHeader,"C6_PRODUTO","C6_ITEM","C6_ITEMGRD",aScan(aHeader,{|x| AllTrim(x[2]) == "C6_DESCRI"}))
+	EndIf
+
+	If ( lQuery )
+		dbSelectArea(cArqQry)
+		dbCloseArea()
+		ChkFile("SC6", .F. )
+		dbSelectArea("SC6")
+	EndIf
+
+
+
+
+	If ( Len(aCols) == 0 )
+		HELP(" ",1,"A440S/ITEM")
+		lContinua := .F. 
+	EndIf
+	If ( lBloqueio )
+		Help(" ",1,"A410ELIM")
+		lContinua := .F. 
+	EndIf
+
+	If (!(SuperGetMv("MV_ALTPED")=="S") .And.  !lNaoFatur .And.  !(SC5->C5_TIPO $ "CIP") ) .And.  !(!Empty(SC5->C5_PEDEXP) .And.  SuperGetMv("MV_EECFAT") .And.  FindFunction("AVINTEMB") .And.  AvIntEmb())
+		Help(" ",1,"A410PEDFAT")
+		lContinua := .F. 
+	EndIf
+
+EndIf
+If  ( lContinua )
+
+
+
+	PcoIniLan("000103")
+
+
+
+
+	aSize    := MsAdvSize()
+	aObjects := {}
+	AAdd( aObjects, { 100, 100, .T. , .T.  } )
+	AAdd( aObjects, { 100, 100, .T. , .T.  } )
+	AAdd( aObjects, { 100, 015, .T. , .F.  } )
+
+	aInfo   := { aSize[ 1 ],aSize[ 2 ],aSize[ 3 ],aSize[ 4 ],03,03 }
+	aPosObj := MsObjSize( aInfo, aObjects )
+	aPosGet := MsObjGetPos(aSize[3]-aSize[1],315,{{003,157,189,236,268}})
+
+	oDlg = MsDialog():New( aSize[7], 0, aSize[6], aSize[5], cCadastro,,,.F.,,,,, oMainWnd,.T.,, ,.F. )
+
+	Zero();MsMGet():New( cAlias, nReg, nOpc, , , , , aPosObj[1], aCPos1, 3 )
+	SetKey(115,{|| A440Stok(NIL,"A440") })
+
+	oGetd   :=  MsGetDados():New(aPosObj[2,1],aPosObj[2,2],aPosObj[2,3],aPosObj[2,4],nOpc,"A440LinOk","A440TudOk","",,aCPos2,nColFreeze,,,,,,,,lFreeze)
+
+	nLinGet := aPosObj[3,1]
+
+	 oSAY1 := TSay():New( nLinGet, aPosGet[1,1],{||  Space(40)},oDlg,"@!",,.F.,.F.,.F.,.T.,,, 120, 09,.F.,.F.,.F.,.F.,.F.,.F. )
+	 TSay():New( nLinGet, aPosGet[1,2],{||  OemToAnsi("Total.:")},oDlg,,,.F.,.F.,.F.,.T.,,, 020, 09,.F.,.F.,.F.,.F.,.F.,.F. )
+	 oSAY2 := TSay():New( nLinGet, aPosGet[1,3],{||  0},oDlg,IIf(cPaisloc=="CHI",Nil,TM(0,16,nNumDec)),,.F.,.F.,.F.,.T.,,, 040, 09,.F.,.F.,.F.,.F.,.F.,.F. )
+	 TSay():New( nLinGet, aPosGet[1,4],{||  OemToAnsi("Desc..:")},oDlg,,,.F.,.F.,.F.,.T.,,, 020, 09,.F.,.F.,.F.,.F.,.F.,.F. )
+	 oSAY3 := TSay():New( nLinGet, aPosGet[1,5],{||  0},oDlg,IIf(cPaisloc=="CHI",Nil,TM(0,16,nNumDec)),,.F.,.F.,.F.,.T.,,, 040, 09,.F.,.F.,.F.,.F.,.F.,.F. )
+	 TSay():New( nLinGet+10, aPosGet[1,4],{||  OemToAnsi("=")},oDlg,,,.F.,.F.,.F.,.T.,,, 020, 09,.F.,.F.,.F.,.F.,.F.,.F. )
+	 oSAY4 := TSay():New( nLinGet+10, aPosGet[1,5],{||  0},oDlg,IIf(cPaisloc=="CHI",Nil,TM(0,16,nNumDec)),,.F.,.F.,.F.,.T.,,, 040, 09,.F.,.F.,.F.,.F.,.F.,.F. )
+
+
+
+	oDlg:Cargo	:= {|c1,n2,n3,n4|  oSay1:SetText(c1), oSay2:SetText(n2), oSay3:SetText(n3), oSay4:SetText(n4) }
+	Ma410Rodap(oGetD)
+	oDlg:Activate( oDlg:bLClicked, oDlg:bMoved, oDlg:bPainted,,,,{|Self|A440Bar(oDlg,{||nOpca:=1,if(oGetd:TudoOk(),oDlg:End(),nOpca:=0)},{||oDlg:End()})}, oDlg:bRClicked, )
+	SetKey(115,)
+	If ExistBlock("MT440GR")
+		nOpcA := If(ExecBlock("MT440GR", .f. , .f. ,{nOpcA}),nOpca,2)
+	EndIf
+	If ( nOpcA == 1 )
+		If ( A410Trava() )
+			If ( cPaisLoc $ "ARG|POR|EUA" )
+				A440AE()
+			EndIf
+
+			If AllTrim(SuperGetMv("MV_ESTADO")) == "AL"
+	   			lPvBlq := VldRegAl()
+	   		EndIf
+
+			If !lPvBlq
+				A440Grava(lLiber,lTransf)
+			EndIf
+
+			EvalTrigger()
+
+			If ( (ExistBlock("M440STTS") ) )
+				ExecBlock("M440STTS", .f. , .f. )
+			Endif
+		EndIf
+	EndIf
+
+
+
+	PcoFinLan("000103")
+EndIf
+
+
+
+SetKey(123,bSetKey)
+MsUnLockAll()
+RestArea(aArea)
+Return(nOpcA)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function A440Automa(cAlias,nReg,nOpc)
+
+Local aArea     := GetArea()
+Local aAreaSC6  := SC6->(GetArea())
+Local nOpcA     := 0
+If ( Pergunte("MTALIB", .T. ) )
+
+
+
+
+
+
+	FormBatch(cCadastro,{ OemToAnsi("  Este programa  tem  como  objetivo  gerar automaticamente as libera‡”es     "),		OemToAnsi("  de pedidos, tomando-se como base o cr‚dito do cliente e a existencia         "),		OemToAnsi("  dos produtos em estoque e a data de entrega do item do pedido.               ") },		{ { 5, .F. ,{|o| o:oWnd:End()}}, { 1, .T. ,{|o| nOpcA := 1, o:oWnd:End()}}, { 2, .T. ,{|o| o:oWnd:End()}}})
+	If ( nOpcA == 1 )
+		Processa({|lEnd| a440Proces(cAlias,nReg,nOpc,@lEnd)},,, .T. )
+	EndIf
+EndIf
+
+
+
+RestArea(aAreaSC6)
+Eval(bFiltraBrw)
+RestArea(aArea)
+Return(nOpcA)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function a440Proces(cAlias,nReg,nOpc,lEnd)
+
+Local aArea     := GetArea()
+Local aRegistros:= {}
+Local lQuery    := .F. 
+Local cQuery    := ""
+Local cAliasSC6 := "SC6"
+Local cPedido   := ""
+Local cIndSC6   := CriaTrab(, .F. )
+Local cFiltro   := ""
+Local cMensagem := RetTitle("C6_NUM")
+Local nFolga    := GetMV("MV_FOLGAPV")
+Local nIndex    := 0
+Local nQtdLib   := 0
+Local lMt440Fil := ExistBlock("MT440FIL")
+Local lMt440Lib := ExistBlock("MT440LIB")
+Local lMta410TT := ExistTemplate("MTA410T")
+Local lMta410T  := ExistBlock("MTA410T")
+Local lFiltro   := .F. 
+Local lValido   := .T. 
+
+Private nValItPed := 0
+
+If !Empty(SC5->(dbFilter()))
+	SC5->(dbClearFilter())
+	lFiltro := .T. 
+Endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+If ExistBlock("MT440VLD")
+	lValido := ExecBlock("MT440VLD", .F. , .F. )
+EndIf
+If lValido
+
+	ProcRegua(SC6->(LastRec()))
+	If ( MV_PAR01 == 2 )
+		dbSelectArea("SC6")
+		dbSetOrder(3)
+	Else
+		dbSelectArea("SC6")
+		dbSetOrder(1)
+	EndIf
+
+		If (TcSrvType()<>"AS/400")
+			lQuery := .T. 
+			cAliasSC6 := "QUERYSC6"
+			cQuery := "SELECT SC6.R_E_C_N_O_ C6RECNO,SC5.R_E_C_N_O_ C5RECNO,"
+			cQuery += "SC6.C6_FILIAL,SC6.C6_NUM,SC6.C6_ITEM,SC6.C6_QTDVEN,SC6.C6_QTDEMP,SC6.C6_QTDENT,"
+			cQuery += "SC6.C6_ENTREG,SC6.C6_BLQ,SC6.C6_BLOQUEI "
+			cQuery += " FROM "+RetSqlName("SC6")+" SC6,"
+			cQuery += RetSqlName("SC5")+" SC5 "
+			cQuery += " WHERE SC6.C6_FILIAL = '"+xFilial("SC6")+"' AND "
+			cQuery += " SC6.C6_NUM >='"+MV_PAR02+"' AND "
+			cQuery += " SC6.C6_NUM <='"+MV_PAR03+"' AND "
+			cQuery += " SC6.C6_CLI >='"+MV_PAR04+"' AND "
+			cQuery += " SC6.C6_CLI <='"+MV_PAR05+"' AND "
+			cQuery += " SC6.C6_ENTREG >='"+Dtos(MV_PAR06)+"' AND "
+			cQuery += " SC6.C6_ENTREG <='"+Dtos(MV_PAR07)+"' AND "
+			cQuery += " SC6.C6_ENTREG < '"+Dtos(dDataBase+nFolga)+"' AND "
+			cQuery += " SC6.C6_BLQ NOT IN ('S ','R ') AND "
+			cQuery += " (SC6.C6_QTDVEN-SC6.C6_QTDEMP-SC6.C6_QTDENT)>0 AND "
+			cQuery += " SC6.D_E_L_E_T_ = ' ' AND "
+			cQuery += " SC5.C5_FILIAL='"+xFilial("SC5")+"' AND "
+			cQuery += " SC5.C5_NUM=SC6.C6_NUM AND "
+			cQuery += " SC5.D_E_L_E_T_ = ' ' "
+			cQuery += " ORDER BY "+SqlOrder(SC6->(IndexKey()))
+			cQuery := ChangeQuery(cQuery)
+
+			dbUseArea( .T. , "TOPCONN", TCGENQRY(,,cQuery),cAliasSC6, .F. , .T. )
+
+			TcSetField(cAliasSC6,"C6_ENTREG","D",8,0)
+		Else
+
+		cAliasSC6 := "QUERYSC6"
+		ChkFile("SC6", .F. ,cAliasSC6)
+
+		cQuery := "C6_FILIAL=='"+xFilial("SC6")+"'.And."
+		cQuery += "C6_NUM>='"+MV_PAR02+"'.And."
+		cQuery += "C6_NUM<='"+MV_PAR03+"'.And."
+		cQuery += "C6_CLI>='"+MV_PAR04+"'.And."
+		cQuery += "C6_CLI<='"+MV_PAR05+"'.And."
+		cQuery += "Dtos(C6_ENTREG)>='"+Dtos(MV_PAR06)+"'.And."
+		cQuery += "Dtos(C6_ENTREG)<='"+Dtos(MV_PAR07)+"'.And."
+		cQuery += "Dtos(C6_ENTREG)<'"+Dtos(dDataBase+nFolga)+"'.And."
+		cQuery += "C6_BLQ!='S '.And.C6_BLQ!='R '"
+
+		IndRegua(cAliasSC6,cIndSC6,SC6->(IndexKey()),,cQuery)
+		dbGotop()
+
+		EndIf
+
+	dbSelectArea(cAliasSC6)
+	While !Eof() .And.  (cAliasSC6)->C6_FILIAL == xFilial("SC6")
+
+		cPedido    := (cAliasSC6)->C6_NUM
+		aRegistros := {}
+
+
+		While !Eof() .And.  (cAliasSC6)->C6_FILIAL == xFilial("SC6") .And.  (cAliasSC6)->C6_NUM == cPedido
+
+
+
+			If !AllTrim((cAliasSC6)->C6_BLQ) $ "SR" .And.  (cAliasSC6)->C6_ENTREG <= (dDataBase + nFolga) .And.  Empty((cAliasSC6)->C6_BLOQUEI)
+
+
+
+				nQtdLib := ( (cAliasSC6)->C6_QTDVEN - ( (cAliasSC6)->C6_QTDEMP + (cAliasSC6)->C6_QTDENT ) )
+				If lMt440Lib
+					If ( lQuery )
+						SC6->(MsGoto((cAliasSC6)->C6RECNO))
+					Else
+						SC6->(MsGoto((cAliasSC6)->(RecNo())))
+					EndIf
+					nQtdLib := ExecBlock("MT440LIB", .F. , .F. ,nQtdLib)
+				EndIf
+				If lMt440Fil
+					If ( lQuery )
+						SC6->(MsGoto((cAliasSC6)->C6RECNO))
+					Else
+						SC6->(MsGoto((cAliasSC6)->(RecNo())))
+					EndIf
+					cFiltro := ExecBlock("MT440FIL", .F. , .F. )
+				EndIf
+				If nQtdLib > 0 .And.  (Empty(cFiltro) .Or.  &cFiltro)
+
+
+
+					If !lQuery
+						dbSelectArea("SC5")
+						dbSetOrder(1)
+						MsSeek(xFilial("SC5")+cPedido)
+					Else
+						dbSelectArea("SC5")
+						MsGoto((cAliasSC6)->C5RECNO)
+					EndIf
+					If RecLock("SC5")
+
+
+
+						If ( lQuery )
+							SC6->(MsGoto((cAliasSC6)->C6RECNO))
+						Else
+							SC6->(MsGoto((cAliasSC6)->(RecNo())))
+						EndIf
+
+
+
+						RecLock("SC6")
+						nQtdLib := ( SC6->C6_QTDVEN - ( SC6->C6_QTDEMP + SC6->C6_QTDENT ) )
+						If lMt440Lib
+							nQtdLib := ExecBlock("MT440LIB", .F. , .F. ,nQtdLib)
+						EndIf
+						If nQtdLib > 0
+
+
+
+							If ( SC5->C5_TIPLIB == "1" )
+
+
+
+								Begin Sequence; BeginTran()
+									MaLibDoFat(SC6->(RecNo()),@nQtdLib, .F. , .F. , .T. ,MV_PAR08==1,lLiber,lTransf)
+								EndTran(); end
+							Else
+
+
+
+								Begin Sequence; BeginTran()
+									RecLock("SC6")
+									SC6->C6_QTDLIB := nQtdLib
+									MsUnLock()
+									aadd(aRegistros,SC6->(RecNo()))
+								EndTran(); end
+							EndIf
+						EndIf
+						SC6->(MsUnLock())
+					EndIf
+				EndIf
+			EndIf
+
+
+
+			IncProc(cMensagem+"..:"+(cAliasSC6)->C6_NUM+"/"+(cAliasSC6)->C6_ITEM)
+			dbSelectArea(cAliasSC6)
+			dbSkip()
+		EndDo
+
+
+
+		If ( Len(aRegistros) > 0 )
+			Begin Sequence; BeginTran()
+				SC6->(MaAvLibPed(cPedido,lLiber,lTransf, .F. ,aRegistros,Nil,Nil,Nil,MV_PAR08==1))
+			EndTran(); end
+		EndIf
+
+
+
+		Begin Sequence; BeginTran()
+			SC6->(MaLiberOk({cPedido}, .F. ))
+		EndTran(); end
+
+
+
+		If ( lMta410TT )
+			ExecTemplate("MTA410T", .F. , .F. )
+		EndIf
+
+		If nModulo == 72
+			KEXF920()
+		EndIf
+
+		If ( lMta410T )
+			ExecBlock("MTA410T", .F. , .F. )
+		EndIf
+
+
+
+		dbSelectArea(cAliasSC6)
+		If lEnd
+			Exit
+		EndIf
+	EndDo
+
+
+
+EndIf
+dbSelectArea(cAliasSC6)
+dbCloseArea()
+Ferase(cIndSC6+OrdBagExt())
+dbSelectArea("SC6")
+
+If Type("bFiltraBrw") == "B" .And.  lFiltro
+	Eval(bFiltraBrw)
+Endif
+
+RestArea(aArea)
+Return( .T. )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function A440LinOk()
+Local lRet     := .T. 
+Local nPosQuant:= 0
+Local nPosServ := 0
+Local nPosLoc  := 0
+nPosQuant := aScan(aHeader,{ |x| Alltrim(x[2])=="C6_QTDLIB"})
+nPosServ  := aScan(aHeader,{ |x| Alltrim(x[2])=="C6_SERVIC"})
+nPosLoc   := aScan(aHeader,{ |x| Alltrim(x[2])=="C6_LOCALIZ"})
+
+lRet := A440Qtdl(aCols[n,nPosQuant])
+
+If  lRet .And.  nPosServ > 0 .And.  nPosLoc > 0
+	If !Empty(aCols[n][nPosServ]) .And.  !Empty(aCols[n][nPosLoc])
+
+		DC5->(DbSetOrder(1))
+		If	DC5->(MsSeek(xFilial("DC5")+aCols[n,nPosServ]) .And.  DC5_FUNEXE<>"000005")
+			Aviso("SigaWMS", STR0021, {"Ok"})
+			lRet := .F. 
+		EndIf
+	EndIf
+EndIf
+Return lRet
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function A440Stok(aLiberado,cProg)
+
+Local aArea     := GetArea()
+Local lGrade    := GetMv("MV_GRADE")
+Local nPProduto := aScan(aHeader,{|x| AllTrim(x[2])=="C6_PRODUTO"})
+Local nPTes     := aScan(aHeader,{|x| AllTrim(x[2])=="C6_TES"})
+Local nPLocal   := aScan(aHeader,{|x| AllTrim(x[2])=="C6_LOCAL"})
+Local cProduto  := ""
+Local cLocal    := ""
+Local cTes      := ""
+Local bSetKey   := SetKey(115,Nil)
+
+cProg := If( cProg == nil, IIf(Valtype(cProg)=="C",cProg,"A440"), cProg ) ;
+If nPProduto > 0 .And.  nPLocal > 0 .And.  nPTES > 0 .And.  n<=Len(aCols)
+	cProduto  := aCols[n][nPProduto]
+	cLocal    := aCols[n][nPLocal]
+	cTes      := aCols[n][nPTes]
+
+	If ( ValType(aLiberado) <> "A" )
+		aQtdLib := {}
+	Else
+		aQtdLib := aLiberado
+	EndIf
+
+	dbSelectArea("SF4")
+	dbSetOrder(1)
+	MsSeek(xFilial("SF4")+cTes)
+
+	If ( lGrade )
+		MatGrdPrRf(@cProduto)
+	EndIf
+
+	cCpoQtd := "M->C6_QTDVEN"
+	cCpoPrc := "M->C6_PRCVEN"
+
+	Do Case
+
+
+
+	Case ( "C6_NUMLOTE" $ ReadVar() .Or.  "C6_LOTECTL" $ ReadVar() )
+
+
+
+		nPosLote        := aScan(aHeader,{|x| AllTrim(x[2])=="C6_NUMLOTE"})
+		nPosLotCtl      := aScan(aHeader,{|x| AllTrim(x[2])=="C6_LOTECTL"})
+		nPosDValid      := aScan(aHeader,{|x| AllTrim(x[2])=="C6_DTVALID"})
+		nPosPotenc      := aScan(aHeader,{|x| AllTrim(x[2])=="C6_POTENCI"})
+		F4Lote(,,,"A440",cProduto,cLocal)
+
+
+
+
+	Case ( "C6_NFORI" $ ReadVar() .And.  M->C5_TIPO $ "DPIC" )
+		If ( M->C5_TIPO == "D" )
+			F4NfOri(,,,M->C5_CLIENTE,M->C5_LOJACLI,cProduto,"A440")
+		Else
+			F4Compl(,,,M->C5_CLIENTE,M->C5_LOJACLI,cProduto,"A440")
+		EndIf
+
+
+
+	Case ( "C6_LOCALIZ" $ ReadVar() )
+		F4Localiz( ,,, cProg )
+
+
+
+	Case ( ("C6_QTDVEN" $ ReadVar() .Or. "C6_UNSVEN" $ ReadVar()) .And.  SF4->F4_PODER3=="D" )
+		If ( M->C5_TIPO $ "BN" )
+			If cPaisLoc == "BRA"
+				F4Poder3(cProduto,cLocal,M->C5_TIPO,"S",M->C5_CLIENTE,M->C5_LOJACLI,,SF4->F4_ESTOQUE,M->C5_NUM)
+			Else
+				A440F4( "SB6",cProduto,cLocal,"B6_PRODUTO","D",M->C5_CLIENTE,M->C5_LOJACLI,Altera, .F. ,,If(M->C5_TIPO=="B","F","C"))
+			EndIf
+		EndIf
+	Case ( "C6_QTDVEN" $ ReadVar() .Or.  "C6_QTDLIB" $ ReadVar() )
+		If ( ExistBlock("A440STK") )
+			ExecBlock("A440STK", .f. , .f. )
+		Else
+			MaViewSB2(cProduto,,cLocal)
+		EndIf
+	EndCase
+EndIf
+
+
+
+SetKey(115,bSetKey)
+RestArea(aArea)
+Return( .T. )
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function A440Lote()
+Local cLote, cProduto, cLocal, nSaldo, cAlias := Alias(), cTes
+Local nPosProd := 0
+Local lGrade    := MaGrade()
+Local cLoteCtl
+Local nX        := 0
+Local lEmpPrev  := If(SuperGetMV("MV_QTDPREV")== "S", .T. , .F. )
+
+cLote := &(ReadVar())
+
+nPosProd := Ascan(aHeader,{ |x| Alltrim(x[2])=="C6_PRODUTO"})
+If !Rastro(aCols[n,nPosProd])
+	If !Empty(cLote)
+		Help(" ",1,"A440NAORAS")
+	EndIf
+	For nx = 1 to Len(aHeader)
+		If Trim(aHeader[nx][2]) == "C6_NUMLOTE"
+			aCols[n][nx] :=CriaVar("C6_NUMLOTE")
+			M->C6_NUMLOTE:=CriaVar("C6_NUMLOTE")
+		ElseIf Trim(aHeader[nx][2]) == "C6_LOTECTL"
+			aCols[n][nx] :=CriaVar("C6_LOTECTL")
+			M->C6_LOTECTL:=CriaVar("C6_LOTECTL")
+		ElseIf Trim(aHeader[nx][2]) == "C6_DTVALID"
+			aCols[n][nx] :=CriaVar("C6_DTVALID")
+			M->C6_DTVALID:=CriaVar("C6_DTVALID")
+		EndIf
+	Next
+	Return .T. 
+EndIf
+
+If Empty(cLote)
+	Return .T. 
+EndIf
+
+For nx=1 to Len(aHeader)
+	If Trim(aHeader[nX][2]) == "C6_PRODUTO"
+		cProduto := aCols[n][nx]
+
+
+
+
+		If lGrade
+			lRet:=MatGrdPrRf(cProduto)
+			If lRet
+				cProduto:=Alltrim(cProduto)
+			Endif
+		Endif
+	Elseif Trim(aHeader[nX][2]) == "C6_LOCAL"
+		cLocal := aCols[n][nx]
+	Elseif Trim(aHeader[nX][2]) == "C6_QTDLIB"
+		nQtdLib := aCols[n][nx]
+	Elseif Trim(aHeader[nX][2]) == "C6_TES"
+		cTes := aCols[n][nx]
+	Elseif Trim(aHeader[nX][2]) == "C6_LOTECTL"
+		cLoteCtl := aCols[n][nx]
+	End
+next
+
+dbSelectArea("SF4")
+MsSeek(xFilial()+cTes)
+
+
+
+dbSelectArea("SB8")
+dbSetOrder(1)
+MsSeek(xFilial()+cProduto+cLocal)
+If !Found()
+	Help(" ",1,"A440NAOLOT")
+	For nx = 1 to Len(aHeader)
+		If Trim(aHeader[nx][2]) == "C6_NUMLOTE"
+			aCols[n][nx] :=CriaVar("C6_NUMLOTE")
+			M->C6_NUMLOTE:=CriaVar("C6_NUMLOTE")
+		ElseIf Trim(aHeader[nx][2]) == "C6_LOTECTL"
+			aCols[n][nx] :=CriaVar("C6_LOTECTL")
+			M->C6_LOTECTL:=CriaVar("C6_LOTECTL")
+		ElseIf Trim(aHeader[nx][2]) == "C6_DTVALID"
+			aCols[n][nx] :=CriaVar("C6_DTVALID")
+			M->C6_DTVALID:=CriaVar("C6_DTVALID")
+		EndIf
+	Next
+	dbSelectArea(cAlias)
+	Return .T. 
+Else
+	If SF4->F4_ESTOQUE == "S" .AND.  !(M->C5_TIPO $ "CIP")
+		dbSelectArea("SB8")
+
+		If Rastro( cProduto, "S" )
+			dbSetOrder( 2 )
+			MsSeek(xFilial("SB8")+cLote+If(!Empty(cLoteCtl),cLoteCtl,CriaVar("C6_LOTECTL", .F. ))+cProduto+cLocal)
+		Else
+			dbSetOrder( 3 )
+			cChave := xFilial( "SB8" ) + cProduto + cLocal + cLoteCtl
+			MsSeek( cChave, .f.  )
+		EndIf
+
+		If Found()
+
+			If Rastro( cProduto, "S" )
+				nSaldo := SB8SALDO(,,,,,lEmpPrev,,, .T. ) - ( SB8SALDO( .T. ,,,,,lEmpPrev,,, .T. ) + QtdLote(SB8->B8_PRODUTO,SB8->B8_LOCAL,SB8->B8_NUMLOTE) )
+			Else
+
+				nSaldo := SaldoLote( cProduto, cLocal, cLoteCtl )
+				nSaldo -= QtdLote(SB8->B8_PRODUTO,SB8->B8_LOCAL,,,SB8->B8_LOTECTL)
+
+			EndIf
+
+			If nSaldo > 0
+				For nX := 1 To Len(aHeader)
+					If nSaldo < nQtdLib
+						If Trim(aHeader[nX][2]) == "C6_QTDLIB"
+							aCols[n][nX] := nSaldo
+						ElseIf Trim(aHeader[nX][2]) == "C6_NUMLOTE"
+							aCols[n][nX] := cLote
+							M->C6_NUMLOTE := cLote
+						ElseIf Trim(aHeader[nx][2]) == "C6_LOTECTL"
+							aCols[n][nx] :=SB8->B8_LOTECTL
+							M->C6_LOTECTL:=SB8->B8_LOTECTL
+						ElseIf Trim(aHeader[nx][2]) == "C6_DTVALID"
+							aCols[n][nx] :=SB8->B8_DTVALID
+							M->C6_DTVALID:=SB8->B8_DTVALID
+						EndIf
+					EndIf
+				next
+			Else
+				Help(" ",1,"A440LOTVAZ")
+				dbSelectArea(cAlias)
+				Return .F. 
+			EndIf
+		Else
+			Help(" ",1,"A440NAOLOT")
+			For nx = 1 to Len(aHeader)
+				If Trim(aHeader[nx][2]) == "C6_NUMLOTE"
+					aCols[n][nx] :=CriaVar("C6_NUMLOTE")
+					M->C6_NUMLOTE:=CriaVar("C6_NUMLOTE")
+				ElseIf Trim(aHeader[nx][2]) == "C6_LOTECTL"
+					aCols[n][nx] :=CriaVar("C6_LOTECTL")
+					M->C6_LOTECTL:=CriaVar("C6_LOTECTL")
+				ElseIf Trim(aHeader[nx][2]) == "C6_DTVALID"
+					aCols[n][nx] :=CriaVar("C6_DTVALID")
+					M->C6_DTVALID:=CriaVar("C6_DTVALID")
+				EndIf
+			Next
+			dbSelectArea(cAlias)
+			Return .T. 
+		EndIf
+	EndIf
+Endif
+Return .T. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function a440Saldo(lRefer,cLocal)
+
+Local nPProduto:= 0
+Local nPLocal   := 0
+Local cProduto := CriaVar("B1_COD")
+Local nColuna  := aScan(aHeader,{|x| AllTrim(x[2]) == AllTrim(Substr(Readvar(),4))})
+Local cMascara := GetMv("MV_MASCGRD")
+Local nTamRef  := Val(Substr(cMascara,1,2))
+Local nStok    := 0
+Local oDlg
+Local nX       := 0
+Local lBuscaProd:= .T. 
+
+
+
+If ( !lRefer )
+	If cPaisLoc == "BRA"
+		nPProduto:= aScan(aHeader,{|x| Alltrim(x[2])=="C6_PRODUTO"})
+		cProduto := aCols[n][nPProduto]
+		nPLocal := aScan(aHeader,{|x| Alltrim(x[2])=="C6_LOCAL"})
+		cLocal := aCols[n][nPLocal]
+	Else
+		For nX := 1 to Len(aHeader)
+
+
+			nPProduto:=	Ascan(aHeader,{|x|	Trim(X[2]) == "C6_PRODUTO" .or.  Trim(X[2]) == "D2_COD" .or.  Trim(X[2]) == "CN_PRODUTO" })
+
+
+			nPLocal	:=	Ascan(aHeader,{|x|	Trim(X[2]) == "C6_LOCAL" .or.  Trim(X[2]) == "D2_LOCAL" .or.  Trim(X[2]) == "CN_LOCAL"  })
+			If nPProduto > 0 .And.  nPLocal >0
+				cProduto := aCols[n][nPProduto]
+				cLocal := aCols[n][nPLocal]
+			Else
+				lBuscaProd := .F. 
+			Endif
+		Next
+	EndIf
+Else
+	If nColuna > 0
+		If FindFunction("MsMatGrade") .And.  IsAtNewGrd()
+			cProduto:= &(MaReadGrd()):GetNameProd(,n,nColuna)
+		Else
+			cProduto := Substr(SB4->B4_COD,1,nTamRef)+aCols[n][1]+aHeader[nColuna][1]
+		EndIf
+	Else
+		lBuscaProd := .F. 
+	Endif
+EndIf
+If lBuscaProd
+	dbSelectArea("SB1")
+	dbSetOrder(1)
+	If ( dbSeek(xFilial("SB1")+cProduto) )
+		dbSelectArea("SB2")
+		dbSetOrder(1)
+		If dbSeek(xFilial("SB2")+PADR(cProduto,LEN(SB2->B2_COD))+cLocal)
+			nStok:= SaldoSb2(,GetNewPar("MV_QEMPV", .T. ))
+		EndIf
+		oDlg = MsDialog():New( 62, 1, 293, 365, OemToAnsi("POSI€AO DO ESTOQUE"),,,.F.,,,,,,.T.,, ,.F. )
+		 TGroup():New( 0, 2, 28, 181, "", oDlg,,,.T., )
+		 TGroup():New( 31, 2, 91, 181, "", oDlg,,,.T., )
+		 TSay():New( 8, 4,{||  OemToAnsi("Produto :")},oDlg,,,.F.,.F.,.F.,.T.,,, 31, 7,.F.,.F.,.F.,.F.,.F.,.F. )
+		 TSay():New( 7, 39,{||  cProduto+" /"+Subs(SB1->B1_DESC,1,20)},oDlg,,,.F.,.F.,.F.,.T.,,, 140, 7,.F.,.F.,.F.,.F.,.F.,.F. )
+		 TSay():New( 16, 5,{||  OemToAnsi("Local    :")},oDlg,,,.F.,.F.,.F.,.T.,,, 31, 7,.F.,.F.,.F.,.F.,.F.,.F. )
+		 TSay():New( 16, 39,{||  cLocal},oDlg,,,.F.,.F.,.F.,.T.,,, 13, 7,.F.,.F.,.F.,.F.,.F.,.F. )
+		 TSay():New( 37, 9,{||  OemToAnsi("Pedido de Vendas em Aberto")},oDlg,,,.F.,.F.,.F.,.T.,,, 92, 7,.F.,.F.,.F.,.F.,.F.,.F. )
+		 TSay():New( 37, 118,{||  B2_QPEDVEN},oDlg,PesqPict("SB2","B2_QPEDVEN",14,2),,.F.,.F.,.F.,.T.,,, 53, 7,.F.,.F.,.F.,.F.,.F.,.F. )
+		 TSay():New( 45, 9,{||  OemToAnsi("Quantidade Empenhada")},oDlg,,,.F.,.F.,.F.,.T.,,, 88, 7,.F.,.F.,.F.,.F.,.F.,.F. )
+		 TSay():New( 45, 118,{||  B2_QEMP},oDlg,PesqPict("SB2","B2_QEMP",14,2),,.F.,.F.,.F.,.T.,,, 53, 7,.F.,.F.,.F.,.F.,.F.,.F. )
+		 TSay():New( 53, 9,{||  OemToAnsi("Qtd.Prevista p/Entrar")},oDlg,,,.F.,.F.,.F.,.T.,,, 88, 7,.F.,.F.,.F.,.F.,.F.,.F. )
+		 TSay():New( 53, 118,{||  B2_SALPEDI},oDlg,PesqPict("SB2","B2_SALPEDI",14,2),,.F.,.F.,.F.,.T.,,, 53, 7,.F.,.F.,.F.,.F.,.F.,.F. )
+		 TSay():New( 61, 9,{||  OemToAnsi("Quantidade Reservada (A)")},oDlg,,,.F.,.F.,.F.,.T.,,, 88, 7,.F.,.F.,.F.,.F.,.F.,.F. )
+		 TSay():New( 61, 118,{||  B2_RESERVA},oDlg,PesqPict("SB2","B2_RESERVA",14,2),,.F.,.F.,.F.,.T.,,, 53, 7,.F.,.F.,.F.,.F.,.F.,.F. )
+		 TSay():New( 69, 9,{||  OemToAnsi("Saldo Atual (B)")},oDlg,,,.F.,.F.,.F.,.T.,,, 53, 7,.F.,.F.,.F.,.F.,.F.,.F. )
+		 TSay():New( 69, 118,{||  B2_QATU},oDlg,PesqPict("SB2","B2_QATU",14,2),,.F.,.F.,.F.,.T.,,, 53, 7,.F.,.F.,.F.,.F.,.F.,.F. )
+		 TSay():New( 78, 9,{||  OemToAnsi("Dispon¡vel (B - A)")},oDlg,,,.F.,.F.,.F.,.T.,,, 53, 7,.F.,.F.,.F.,.F.,.F.,.F. )
+		 TSay():New( 78, 118,{||  nStoK},oDlg,PesqPict("SB2","B2_QATU",14,2),,.F.,.F.,.F.,.T.,,, 53, 7,.F.,.F.,.F.,.F.,.F.,.F. )
+		 SButton():New( 98, 149,1,{||  (oDlg:End())}, oDlg,.T.,,)
+		oDlg:Activate( oDlg:bLClicked, oDlg:bMoved, oDlg:bPainted,,,,, oDlg:bRClicked, )
+	Else
+		HELP(" ",1,"C6_PRODUTO")
+	EndIf
+EndIf
+
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+Function A440AE()
+Local oDlg, oQual, nOpcA := 0
+Local lRet := .T. 
+Local lAutoEnt := If( GetMV("MV_AUTOENT")=="S", .T. , .F.  )
+Local nX       := 0
+Local nI       := 0
+
+If ! lAutoEnt
+	Return
+EndIf
+
+aArrayAE := {}
+
+For nI := 1 To Len(aCOLS)
+	For nX := 1 To Len(aHeader)
+		If Trim(aHeader[nX][2]) == "C6_ITEM"
+			cItemAE := aCols[nI][nX]
+			AADD(aArrayAE,{ cItemAE,"      " })
+		EndIf
+	next
+next
+
+cCadastro := OemToAnsi("Numeraci¢n de la Aut. Entregas")
+
+oDlg = MsDialog():New( 10, 30, 19, 68, cCadastro,,,.F.,,,,, oMainWnd,.F.,, ,.F. )
+ oQual := VAR := cVarQ := TWBrowse():New( .5, .80, 130, 42,{|| { NOSCROLL } },{ OemToAnsi("Item Pedido"),OemToAnsi("Aut. Entrega")},,, ,,,,{|nRow,nCol,nFlags|(aArrayAE:=A440Troca(oQual:nAt,aArrayAE),oQual:Refresh())},,,,,,,.F.,,.F.,,.F.,,, )
+oQual:SetArray(aArrayAE)
+oQual:bLine := { || {aArrayAE[oQual:nAT,1],aArrayAE[oQual:nAT,2]}}
+ SButton():New( 51, 80,1,{||  (nOpcA:=1,oDlg:End())}, oDlg,.T.,,)
+ SButton():New( 51, 107,2,{||  (nOpcA:=2,oDlg:End())}, oDlg,.T.,,)
+oDlg:Activate( oDlg:bLClicked, oDlg:bMoved, oDlg:bPainted,,,,, oDlg:bRClicked, )
+
+For nI := 1 To Len(aArrayAE)
+	If Empty(aArrayAE[nI][2])
+		HELP(" ",1,"NVAZIO")
+		lRet:= .F. 
+	EndIf
+next
+
+If ! lRet
+	A440AE()
+EndIf
+Return( .T. )
+
+Function A440Troca(nIt,aArrayAE)
+Local cCadastro := OemToAnsi("Aut. Entrega")
+cNumero  := aArrayAE[nIt,2]
+cSerie   := aArrayAE[nIt,1]
+
+
+
+
+If ExistBlock(("A440F4AE"))
+	SetKey( 115, { || ExecBlock("A440F4AE", .F. , .F. ,nIt) } )
+EndIf
+
+While .T. 
+	oDlgGet = MsDialog():New( 12, 60, 15, 77, cCadastro,,,.F.,,,,, oMainWnd,.F.,, ,.F. )
+	 TSay():New( .3, .8,{||  "F4-Disponible..."},,,,.F.,.F.,.F.,.F.,,,,,.F.,.F.,.F.,.F.,.F.,.F. )
+	 MsGets():New( .8, .8, { | u | If( PCount() == 0, cNumero, cNumero := u ) },,,, "@!",,,, oDlgGet:oFont,.F.,,.F.,,.F.,,.F.,.F.,,.F. ,"cNumero")
+	oDlgGet:Activate( oDlgGet:bLClicked, oDlgGet:bMoved, oDlgGet:bPainted,,,,, oDlgGet:bRClicked, )
+	aArrayAE[nIt,2] := cNumero
+	If A440ValAE(cNumero)
+		Exit
+	Endif
+End
+If ExistBlock(("A440F4AE"))
+	SetKey( 115, NIL )
+EndIf
+Return( aArrayAE )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function A440ValAE(cNumero)
+Local lRet:= .T. 
+
+If Empty(cNumero)
+	HELP(" ",1,"NVAZIO")
+	lRet:= .F. 
+EndIf
+Return lRet
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function A440Bar(oDlg, bOk, bCancel)
+
+Local aButtons   := {}
+Local aUsButtons := {}
+
+
+
+
+
+If ExistBlock( "A440BUT" )
+	If ValType( aUsButtons := ExecBlock( "A440BUT", .F. , .F.  ) ) == "A"
+		AEval( aUsButtons, { |x| AAdd( aButtons, x ) } )
+	EndIf
+EndIf
+
+Return (EnchoiceBar(oDlg,bOK,bcancel,,aButtons))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function MenuDef()
+
+
+
+
+
+
+Private aRotina := {	{"Pesquisar","PesqBrw"	, 0 , 1 , 0 , .F. },							{"Visualizar","A410Visual", 0 , 2 , 0 , NIL},							{"Liberar","A440Libera", 0 , 6 , 0 , NIL},							{"Autom tico","A440Automa", 0 , 0 , 0 , NIL},							{"Legenda","A410Legend", 0 , 0 , 0 , .F. }}
+
+If	SuperGetMv("MV_VEBLQRG", .F. , .F. )
+	If	FindFunction("BlqRegBrw")
+		Aadd (	aRotina, {STR0022,"BlqRegBrw", 0 , 0 , 0 , .F. })
+	EndIf
+EndIf
+
+If ExistBlock("MA440MNU")
+	ExecBlock("MA440MNU", .F. , .F. )
+EndIf
+
+Return(aRotina)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function A440TudOk()
+
+Local lRet := .T. 
+
+
+
+
+If ExistBlock("MA440VLD")
+	lRet := ExecBlock("MA440VLD", .F. , .F. )
+Endif
+
+Return lRet
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function Mta440Lib(cArqQry,lBloqueio,lNaoFatur,lGrade)
+
+Local lRet      := .T. 
+Local lCriaCols := .F. 
+Local nTamaCols :=Len(aCols)
+Local nPosItem  := GDFieldPos("C6_ITEM")
+Local nPosQtd   := GDFieldPos("C6_QTDVEN")
+Local nPosQtd2  := GDFieldPos("C6_UNSVEN")
+Local nPosVlr   := GDFieldPos("C6_VALOR")
+Local nPosSld   := GDFieldPos("C6_SLDALIB")
+Local nPosDesc  := GDFieldPos("C6_VALDESC")
+
+
+If !(("R"$Alltrim((cArqQry)->C6_BLQ)) .And. (GetMv("MV_RSDOFAT")=="N"))
+	lBloqueio := .F. 
+EndIf
+
+If ( (cArqQry)->C6_QTDENT < (cArqQry)->C6_QTDVEN )
+	lNaoFatur := .T. 
+EndIf
+
+
+
+
+
+
+
+If !("MATA410" $ SuperGetMV("MV_GRDMULT", .F. ,"")) .And.  ( (cArqQry)->C6_GRADE == "S" .And.  lGrade )
+	a410Grade( .T. , .T. ,cArqQry,,lCriaCols)
+	If ( nTamAcols==0 .Or.  aCols[nTamAcols][nPosItem] <> (cArqQry)->C6_ITEM )
+		lRet := .T. 
+	Else
+		lRet := .F. 
+		aCols[nTamAcols][nPosQtd]  += (cArqQry)->C6_QTDVEN
+		aCols[nTamAcols][nPosQtd2] += (cArqQry)->C6_UNSVEN
+		If ( nPosDesc > 0 )
+			aCols[nTamAcols][nPosDesc] += (cArqQry)->C6_VALDESC
+		Endif
+		If ( nPosSld > 0 )
+			aCols[nTamAcols][nPosSld] += Ma440SaLib()
+		EndIf
+		aCols[nTamAcols][nPosVlr] += (cArqQry)->C6_VALOR
+	EndIf
+	If Len(aCols) > 0 .And.  lSugere
+		MaIniLiber(M->C5_NUM,(cArqQry)->C6_QTDVEN,Len(aCols))
+	EndIf
+EndIf
+
+If lRet .And.  ExistBlock("MA440SC6")
+	lRet := ExecBlock("MA440SC6", .F. , .F. ,cArqQry)
+Endif
+
+Return lRet
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function AfterCols(cArqQry)
+
+Local nPosProd  := GDFieldPos("C6_PRODUTO")
+Local nPosGrade := GDFieldPos("C6_GRADE")
+Local cMascara  := SuperGetMv("MV_MASCGRD")
+Local nTamRef   := Val(Substr(cMascara,1,2))
+Local cProduto	:= (cArqQry)->C6_PRODUTO
+
+If !("MATA410" $ SuperGetMV("MV_GRDMULT", .F. ,""))
+	If nPosGrade > 0 .And.  aCols[Len(aCols)][nPosGrade] == "S"
+		If A093IsGrade(@cProduto)
+			aCols[Len(aCols)][nPosProd] :=	cProduto
+		Else
+			aCols[Len(aCols)][nPosProd] := SubStr((cArqQry)->C6_PRODUTO,1,nTamRef)
+		Endif
+	Else
+
+
+
+
+
+		If FindFunction("MsMatGrade") .And.  IsAtNewGrd()
+			oGrade:MontaGrade(Len(aCols))
+		Else
+			MatGrdMont(Len(aCols))
+		EndIf
+	EndIf
+EndIf
+
+If ( lSugere )
+	MaIniLiber(M->C5_NUM,(cArqQry)->C6_QTDVEN,Len(aCols))
+EndIf
+
+If ( ExistBlock("M440ACOL") )
+	ExecBlock("M440ACOL", .f. , .f. )
+EndIf
+
+Return( .T. )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function AjustaHelp()
+Local aArea 	:= GetArea()
+Local aHelpPor	:= {}
+Local aHelpEng	:= {}
+Local aHelpSpa	:= {}
+
+	aHelpPor :=	{"Não foi encontrada nenhuma referência do","produto em questão no arquivo de","Saldos Em Estoque (SB2)."}
+aHelpSpa :=	{"No se encontró ninguna referencia al","producto en cuestión en el Archivo","de Productos (SB2)."}
+aHelpEng :=	{"No reference to the product","at issue wasfound in the file","Register of Products  (SB1)."}
+PutHelp("PNOFOUNDSB2",aHelpPor,aHelpEng,aHelpSpa, .T. )
+
+	aHelpPor :=	{"Verifique a Integridade dos Arquivos de","Dados e dos Índices utilizados","pelo Programa."}
+aHelpSpa :=	{"Compruebe la Integridad de los Archivos de","Datos y de los Öndices usados","por el Programa."}
+aHelpEng :=	{"Check the Integrity of","Data Files and Indexes used","by the Program."}
+PutHelp("SNOFOUNDSB2",aHelpPor,aHelpEng,aHelpSpa, .T. )
+
+RestArea(aArea)
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Static Function VldRegAl()
+Local aAreaSvSC6 := SC6->(GetArea())
+Local lBloqPv := .F. 
+
+If M->C5_BLQ == "1"
+	lBloqPv := .T. 
+Else
+	lBloqPv := BlPVLFat(M->C5_CLIENTE,M->C5_LOJACLI)
+	If lBloqPv
+		Begin Sequence; BeginTran()
+			RecLock("SC5", .F. )
+			SC5->C5_BLQ := StrZero(1, Len(SC5->C5_BLQ))
+			SC5->(MsUnLock())
+			SC6->(dbSetOrder(1))
+		   SC6->(dbSeek(xFilial("SC6")+SC5->C5_NUM))
+			RecLock("SC6", .F. )
+		   While SC6->(!Eof()) .And.  SC6->C6_NUM == SC5->C5_NUM
+				SC6->C6_BLOQUEI := StrZero(1, Len(SC6->C6_BLOQUEI))
+				SC6->(dbSkip())
+			EndDo
+			SC6->(MsUnLock())
+		EndTran(); end
+	EndIf
+EndIf
+
+RestArea(aAreaSvSC6)
+Return lBloqPv

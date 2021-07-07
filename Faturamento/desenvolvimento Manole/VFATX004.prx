@@ -1,0 +1,146 @@
+#include "rwmake.ch"          
+#DEFINE OLESAVEASFILE   405
+#DEFINE WDFORMATPDF    "17" // Formato PDF
+
+//-------------------------------------------------------------------\\
+/*/{Protheus.doc} VFATX004
+Impressão de Contrato de Consignação
+@type function
+@author Edmar
+@since 15/03/2019
+@version 1.0
+@example U_VFATX004()
+/*/
+//-------------------------------------------------------------------\\
+User Function VFATX004()
+
+Local cAliasSA1 := GetNextAlias()
+Local cPathDot  := 'C:\smartclient_P12\VFATX004.dotm'
+Local cPathFile := U_GetPathFile(RetCodUsr())
+Local cClie   	:= SA1->A1_COD
+Local cPDF      := ''
+Local cCNPJIE	:= ''
+
+Private hWord
+
+hWord := OLE_CreateLink()
+
+// Esta função inicializa uma nova instância de trabalho entre o Protheus SmartClient
+// e o arquivo modelo (.dot) do pacote Microsoft Office).
+OLE_NewFile(hWord, cPathDot )
+
+// Define o conteúdo de uma variável presente no documento modelo (.dot)  
+// utilizado na integração Microsoft Office à partir do 
+// parâmetro recebido na sua chamada. (Atualiza a DocVariable do Office com uma variavel AdvPL).           
+
+If SA1->A1_TIPO = 'F'
+	cCNPJIE := "CPF: " + Formatar('CPF',SA1->A1_CGC) + "          RG: " + Formatar('RG',SA1->A1_PFISICA)
+Else
+	cCNPJIE := "CNPJ: " + Formatar('CNPJ',SA1->A1_CGC) + "          IE: " + Formatar('IE',SA1->A1_INSCR)
+Endif
+
+OLE_SetDocumentVar(hWord, 'M0_NOMECOM', Alltrim(SM0->M0_NOMECOM))  
+OLE_SetDocumentVar(hWord, 'M0_ENDCOB' , Alltrim(SM0->M0_ENDCOB))  
+OLE_SetDocumentVar(hWord, 'M0_COMPLE' , Formatar('CEP',SM0->M0_CEPCOB)+" - "+Alltrim(SM0->M0_BAIRCOB)+" - "+Alltrim(SM0->M0_CIDCOB)+" - "+Alltrim(SM0->M0_ESTCOB))  
+OLE_SetDocumentVar(hWord, 'M0_CNPJIE' , "CNPJ: " + Formatar('CNPJ',SM0->M0_CGC) + "          IE: " + Formatar('IE',SM0->M0_INSC))  
+OLE_SetDocumentVar(hWord, 'M0_TEL'    , "Tel : " + SM0->M0_TEL)  
+
+OLE_SetDocumentVar(hWord, 'A1_COD'    , Alltrim(SA1->A1_COD))  
+OLE_SetDocumentVar(hWord, 'A1_NOME'   , Alltrim(SA1->A1_NOME))  
+OLE_SetDocumentVar(hWord, 'A1_END'    , Alltrim(SA1->A1_END))  
+OLE_SetDocumentVar(hWord, 'A1_COMPLE' , "CEP: " + Formatar('CEP',SA1->A1_CEP)+" - "+Alltrim(SA1->A1_BAIRRO)+" - "+Alltrim(SA1->A1_MUN)+" - "+Alltrim(SA1->A1_EST))  
+OLE_SetDocumentVar(hWord, 'A1_CGC' 	  , cCNPJIE)
+OLE_SetDocumentVar(hWord, 'A1_EMAIL'  , "e-Mail: "+Alltrim(SA1->A1_EMAIL))  
+
+OLE_SetDocumentVar(hWord, 'A1_CONTATO', SA1->A1_CONTATO)
+OLE_SetDocumentVar(hWord, 'A1_DDD'    , SA1->A1_DDD)
+OLE_SetDocumentVar(hWord, 'A1_TEL'    , SA1->A1_TEL) 
+//OLE_SetDocumentVar(hWord, 'C7_EMISSAO', STOD(SA1->C7_EMISSAO))  
+
+
+// Esta função executa uma macro, presente dentro de um arquivo modelo, 
+// relativo à integração com o Microsoft Office.
+
+            
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Atualizando as variaveis do documento do Word                         ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+// Atualiza todas as variáveis presentes no arquivo modelo, 
+// de acordo com seus conteúdos definidos por meio da função OLE_SetDocumentVar.
+// Recomenda-se a execução ao final da montagem dos atributos do arquivo modelo.
+
+OLE_UpdateFields(hWord)
+
+// Função AdvPL que executa a instrução de impressão do documento modelo
+// da aplicação Microsoft Office (arquivo .dot ou equivalente)
+
+
+/*
+If MsgYesNo("Confirma a impressão do contrato ?")
+//	If mv_par01 == 1
+		ExecInClient(OLESAVEASFILE, { hWord, cPathFile + "CONTRATO_" + cClie + ".pdf", "", "", "0", WDFORMATPDF } )      
+		//OLE_CloseFile( hWord )
+		//OLE_CloseLink( hWord )
+		
+/*
+		DbSelectArea("SC7")
+		
+		reclock("SC7",.F.)
+		SC7->C7_XSTATUS := "IMPRESSO"
+		MsUnlock()
+		Alert("Contrato gravado com sucesso em " + cPathFile + "CONTRATO_" + cPedido + ".pdf")
+//	Else
+//  		Ole_PrintFile(hWord,"ALL",,,1)
+//  	Endif
+
+EndIf
+*/
+
+// Finaliza a conexão entre o Protheus SmartClient e a aplicação MS-Office
+// (Word, Excel etc), para a impressão de conteúdos que utilizam 
+// a funcionalidade de integração entre o Microsiga Protheus e o pacote Microsoft Office.
+            
+If MsgYesNo("Fecha o Word e Corta o Link ?")
+      OLE_CloseFile( hWord )
+      OLE_CloseLink( hWord )
+Endif 
+
+
+//SA1->(DbCloseArea())	
+
+Return()
+//-------------------------------------------------------------------//
+/*/{Protheus.doc} Formatar
+Format campo para impressão no pedido de compras
+@type function
+@author Claudio
+@since 26/12/2017
+@version 1.0
+@param 	cTipo, character, Tipo do formato
+		cCampo, character, Campo que será formatado
+@return cRet
+@example
+Formatar(cTipo, cCampo)
+/*/
+//-------------------------------------------------------------------//
+
+Static Function Formatar(cTipo, cCampo)
+
+Local cRet := cCampo
+
+If cTipo = 'CPF'
+	cRet := SubStr(cCampo,1,3) + '.' + SubStr(cCampo,4,3) + '.' + SubStr(cCampo,7,3) + '-' + SubStr(cCampo,10,2) 
+ElseIf cTipo = 'RG'
+	cRet := SubStr(cCampo,1,3) + '.' + SubStr(cCampo,4,3) + '.' + SubStr(cCampo,7,3) + '-' + SubStr(cCampo,10,1) 
+ElseIf cTipo = 'CNPJ'
+	cRet := SubStr(cCampo,1,2) + '.' + SubStr(cCampo,3,3) + '.' + SubStr(cCampo,6,3) + '/' + SubStr(cCampo,9,4) + '-' + SubStr(cCampo,13,2) 
+ElseIf cTipo = 'IE'
+	If Alltrim(cCampo) <> "ISENTO"
+		cRet := SubStr(cCampo,1,3) + '.' + SubStr(cCampo,4,3) + '.' + SubStr(cCampo,7,3) + '.' + SubStr(cCampo,10,3) 
+	Endif
+ElseIf cTipo = 'CEP'
+	cRet := SubStr(cCampo,1,5) + '-' + SubStr(cCampo,6,3) 
+Endif
+
+Return cRet

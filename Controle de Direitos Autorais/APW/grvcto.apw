@@ -1,0 +1,101 @@
+#include "Protheus.ch"
+#include "apwebex.ch" 
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³GRVCTO    ºAutor  ³Leandro Duarte      º Data ³  06/01/16   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Pagina de gravação dos dados apos assinar o contrato virtualº±±
+±±º          ³                                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ P11                                                        º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+user Function grvcto()
+
+Local cxPv		:= {"!","@","#","$","%","&","?","|","\","/"}
+Local xHR		:= REPLACE(TIME(),":","")
+Local nVt		:= SUBSTR(xHR,LEN(xHR)-1,1)
+Local nVtx		:= val(nVt)+1
+Local cComplPl	:= iif(nVtx==11,1,nVtx)
+Local xHR1		:= REPLACE(TIME(),":","")
+Local nVt1		:= SUBSTR(xHR1,LEN(xHR1)-1,1)
+Local nVtx1		:= val(nVt1)+2
+Local cComplP1	:= iif(nVtx1==11,1,nVtx1)
+Local cPalavrad := ""
+Local cHtml		:= " "
+Local lEntra	:= .F.
+Local cCodEmp	:= "01"
+Local cCodFil	:= "01"
+Local aTables	:= {"AH1","AH2","AH3","AH4","UA2","SX5","SA2","SB1"}
+Private xPalavra	:= criatrab(NIL,.F.)
+Private cNome	:= cCgc :=  ""
+Private cPalavra 	:= alltrim(HttpPost->cPalavra)
+Private cContrato	:= HttpPost->cContrato
+Private cSequenci	:= HttpPost->cSequenci
+Private cTipoCont	:= HttpPost->cTipoCont
+Private cAutor		:= HttpPost->cAutor 
+Private cIP			:= HttpPost->textinput 
+Private cLocaliz	:= HttpPost->cLocaliz 
+Private cMensaErro	:= ""
+
+xPalavra := substr(xPalavra,1,3)+cxPv[cComplPl]+substr(xPalavra,4,3)+cxPv[cComplP1]+substr(xPalavra,7,2)
+RPCSetType( 3 )
+RpcSetEnv ( cCodEmp, cCodFil,,,"CDA",, aTables )
+
+Web Extended Init cHtml
+
+UA2->(dbSetOrder(2))
+if UA2->(dbSeek( xFilial( "UA2" ) + cContrato + cSequenci + cTipoCont ))
+	cChave := UA2->( UA2->UA2_CONTRA + UA2->UA2_SEQCON + UA2->UA2_TIPOCO )
+	While UA2->(!EOF()) .And. UA2->( UA2_FILIAL + UA2->UA2_CONTRA + UA2->UA2_SEQCON + UA2->UA2_TIPOCO ) == xFilial( "UA2" ) + cChave
+		if UA2->UA2_FORNEC == cAutor
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³Validação dos Nomes , CGC informados e palavra secreta³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			cNome		:= upper(alltrim(HttpPost->cNome))
+			cCgc		:= replace(replace(replace(HttpPost->cCGC,".",""),"/",""),"-","")
+			cPalavrad	:= alltrim(HttpPost->cPalavrad) 
+			cMensaErro	:= "ENCONTRADO INCOSISTÊNCIA<BR>" 
+			SA2->(DBSETORDER(1)) 
+			if  SA2->(DBSEEK(xFilial("SA2")+cAutor))
+				if  alltrim(SA2->A2_CGC) != alltrim(cCgc) 
+					cMensaErro += "CPF/CNPJ informado esta invalido <br>"
+				endif
+				if  cPalavra != cPalavrad
+					cMensaErro += "Nome informado esta invalido <br>"
+				endif
+			else
+				cMensaErro := "Cadastro de autor inexistente <BR>"
+			endif
+			IF "ENCONTRADO INCOSISTÊNCIA<BR>" <> cMensaErro
+				cHtml		:= h_Contrato()				
+			ELSE
+				lEntra := .T.
+				RECLOCK("UA2",.F.)
+				UA2->UA2_DTASSI := DTOC(DATE())
+				UA2->UA2_IPASSI := cIP
+				UA2->UA2_HSASSI := TIME()
+				UA2->UA2_LCASSI := cLocaliz
+				UA2->UA2_NMASSI := cNome
+				MSUNLOCK()
+				cHtml		:= h_grvcto()
+			ENDIF
+		ENDIF
+		UA2->(dbskip())
+    end
+endif
+if !lEntra .and. EMPTY(cMensaErro)
+	cMensaErro := "Cadastro de autor inexistente <BR>"
+	cHtml		:= h_Contrato()
+endif
+
+Web Extended End 
+
+RpcClearEnv()
+Return(cHtml)

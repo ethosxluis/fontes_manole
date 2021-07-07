@@ -1,0 +1,34 @@
+{
+    "totvsLanguageServer.welcomePage": false,
+    "advpl.projectActive": "manole",
+    "advpl.environments": [
+        {
+            "environment": "P12_PARALELO1",
+            "name": "P12_PARALELO1",
+            "serverVersion": "191205P",
+            "server": "10.10.1.4",
+            "port": "4580",
+            "user": "adm_wallace",
+            "passwordCipher": "eTRJcGNVYkNsZTJSVmZDZXNyRnVwODdyL2xyU2IrYmprVkZoTU81bDYxc0ordGZIMXdTQVljK1pKYnYzazQ3dHlUdTlqL043cHdmOWtyTkxNRE5iR3l4SzN0c1cwVldzRHQ2OFB1THF5QWZXWkFJWmVxQVBjMHpadWIzQnBWWmo=",
+            "includeList": "c:\\INCLUDE\\",
+            "smartClientPath": "c:\\P12-SMARTCLIENT_BUILD-19.3.0.5_WINDOWS_X64",
+            "enable": true,
+            "totvs_language": "", // Permite ADVPL ou 4GL, se não for informado assume ADVPL.
+            "webappPort": "",  // Porta do WebApp caso se utilize esse tipo de SmartClient para debug
+            "defragPackAllInfo": false, // Se true, ao desfragmentar será limpado todo o histórico de atualizações, deixando o RPO menor ainda
+            "advpl.alpha_compile": true,
+        }
+    ],
+    "advpl.selectedEnvironment": "P12_PARALELO1",
+    "advpl.debug_multiThread": true,
+    "advpl.startProgram": "", // Módulo ou função que será sugerido no launch do Debug
+    "compileFolderRegex": "", // Regex que ira validar se na compilação de folders, o arquivo irá ser compilado ou não.
+
+  // Compilação
+  "advpl.compile_force_recompile": false, // Caso esteja como true, força recompilar os fontes mesmo que não tiveram alteração.
+  "advpl.compile_threads": 4, // Numero de Threads que serão utilizadas quando se compila uma Folder, o padrão é 4. Aumentar para mais de 4 Threads, fara o uso de CPU ficar bem alto
+
+  // Log 
+"advpl.logger": false,
+"totvsLanguageServer.askCompileResult": true, // Cria um log da execução na pasta %temp% conforme SO
+}

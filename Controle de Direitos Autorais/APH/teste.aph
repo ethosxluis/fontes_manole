@@ -1,0 +1,66 @@
+<%
+#include "protheus.ch"
+#include "apwebex.ch" 
+%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Untitled Document</title>
+</head>
+
+<body>
+<form id="form1" name="form1" method="post" action="">
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+  <tr>
+    <td>DATA DE INICIO</td>
+    <td>
+      <label>
+        <input type="text" name="DTINI" id="DTINI" />
+        </label>
+    </td>
+  </tr>
+  <tr>
+    <td>DATA FINAL</td>
+    <td>
+      <label>
+        <input type="text" name="DTFIM" id="DTFIM" />
+        </label>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <label>
+        <input type="submit" name="VDHJ" id="VDHJ" value="VENDIDOS HOJE" />
+        </label>
+    </td>
+    <td>
+      <label>
+        <input type="submit" name="PDT" id="PDT" value="VENDIDOS POR DATA" />
+        </label>
+    </td>
+  </tr>
+  <tr>
+    <td><b><%= IIF(LEN(aRet)>0,"Quantidade Vendida: "+cvaltochar(len(aRet))," ") %></b></td>
+    <td><b><%= IIF(LEN(aRet)>0,"Valor Total Vendido: "+transform(nTot,"@E 999,999,999,999.99")," ") %></b></td>
+  </tr>
+</table>
+<%if len(aRet)>0 %>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+  <tr>
+    <td><strong>Pedido</strong></td>
+    <td><strong>Cliente</strong></td>
+    <td><strong>Valor total do Pedido</strong></td>
+  </tr>
+  <% For nFor := 1 to len(aRet) %> 
+  <tr>
+    <td><%= aRet[nFor][1]%></td>
+    <td><%= aRet[nFor][2]%></td>
+    <td><%= transform(aRet[nFor][3],"@E 999,999,999.99") %></td>
+  </tr>
+  <% next nFor %>
+</table>
+<% endif %>
+</body>
+</form>
+</html>

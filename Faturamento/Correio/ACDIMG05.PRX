@@ -1,0 +1,190 @@
+/*
+Padrao Zebra
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³IMG05     ºAutor  ³Sandro Valex        º Data ³  19/06/01   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Ponto de entrada referente a imagem de identificacao do     º±±
+±±º          ³volume temporario                                           º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP5                                                        º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+User Function Img05   // imagem de etiqueta de volume temporaria
+Local cVolume := paramixb[1]
+Local cPedido := paramixb[2]
+Local cNota   := IF(len(paramixb)>=3,paramixb[3],nil)
+Local cSerie  := IF(len(paramixb)>=4,paramixb[4],nil)
+//Local cID := CBGrvEti('05',{cVolume,cPedido,cNota,cSerie})
+Local cNomeCli := Alltrim(Posicione("SA1",1,xFilial("SA1")+CB7->CB7_CLIENT+CB7->CB7_LOJA,"A1_NOME"))
+Local sConteudo
+
+//MSCBLOADGRF("SIGA.GRF")
+MSCBBEGIN(1,6)
+MSCBBOX(03,03,97,127)
+//MSCBGRAFIC(2,3,"SIGA")
+/*
+If !Empty(cPedido)
+	MSCBSAY(05,10,"PEDIDO:. " + cPedido,"N","0","050,050")
+Else
+	MSCBSAY(05,10,"NOTA:. "+cNota+' '+cSerie,"N","0","050,050")
+EndIf
+*/
+
+MSCBSAY(05,10,cNomeCli,"N","0","040,040")
+
+MSCBSAY(05,20,"PEDIDO :. " + cPedido,"N","0","050,050")
+MSCBSAY(05,30,"ORDEM DE SEPARACAO :. " + CB7->CB7_ORDSEP,"N","0","050,050")
+MSCBSAY(05,40,"VOLUME :. " + cVolume,"N","0","050,050")
+
+MSCBSAYBAR(20,50,cVolume,"N","MB07",9,.F.,.T.,.F.,,3,2,.F.,.F.,"1",.T.)
+
+MSCBSAYBAR(20,70,cPedido,"N","MB07",9,.F.,.T.,.F.,,3,2,.F.,.F.,"1",.T.)
+                             
+
+//MSCBInfoEti("Volume Temp.","30X100")
+sConteudo:=MSCBEND()
+Return sConteudo
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³IMG05OFI  ºAutor  ³Sandro Valex        º Data ³  19/06/01   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Ponto de entrada referente a imagem de identificacao do     º±±
+±±º          ³volume permanente."Oficial"                                 º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP5                                                        º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+User Function Img05OFI // imagem de etiqueta de volume permanente (OFICIAL)
+//Local cId     := CBGrvEti('05',{CB6->CB6_VOLUME,CB6->CB6_PEDIDO})
+Local sConteudo
+Local cCep     := SubStr(SM0->M0_CEPCOB,1,5)+"-"+SubStr(SM0->M0_CEPCOB,6,3)
+Local nTotEti  := paramixb[1]
+Local nAtu     := paramixb[2]
+Local aCliente := BusCli()
+Local aNFiscal := BusNfs()
+Local cNmTrans := Posicione("SA4",1,xFilial("SA4")+CB7->CB7_TRANSP,"A4_NOME")     
+
+MSCBBEGIN(1,6)
+MSCBBOX(03,03,97,127)
+MSCBSAY(05,09,"ORIGEM"  ,"B","0","025,035")
+
+MSCBSAY(12,05,AllTrim(SM0->M0_NOMECOM)  ,"N","0","025,035")
+MSCBSAY(12,10,AllTrim(SM0->M0_ENDCOB)+" - "+AllTrim(SM0->M0_BAIRCOB),"N","0","025,035")
+MSCBSAY(12,15,AllTrim(SM0->M0_CIDCOB)+" "+ cCep +" - "+ SM0->M0_ESTCOB,"N","0","025,035")
+MSCBSAY(12,20,"FONE:(11)" + SM0->M0_TEL,"N","0","025,035")
+MSCBSAY(12,25,"FAX:(11)" + SM0->M0_FAX,"N","0","025,035")
+
+MSCBLineH(03,28,97,4) 
+MSCBSAY(05,33,"DESTINO"  ,"B","0","025,035")
+MSCBLineV(10,03,50,4)
+
+MSCBSAY(12,30,AllTrim(aCliente[1][1]) ,"N","0","020,025")//Nome
+MSCBSAY(12,34,substr(AllTrim(aCliente[1][2]),1,55) ,"N","0","020,025")//Endereco
+MSCBSAY(12,38,substr(AllTrim(aCliente[1][2]),56,55),"N","0","020,025")//Endereco
+MSCBSAY(12,42,AllTrim(aCliente[1][4])+" - "+ aCliente[1][5],"N","0","020,025")//Bairro + Cep
+MSCBSAY(12,46,AllTrim(aCliente[1][3])+" - " +aCliente[1][6],"N","0","020,025")//Municipio + Estado
+MSCBLineH(03,50,97,4) 
+
+MSCBSAY(05,54,"TRANSP:. "+cNmTrans  ,"N","0","025,035")
+MSCBLineH(03,60,97,4) 
+
+MSCBSAY(05,61,"Especie:." ,"N","0","025,035")
+MSCBSAY(05,66,"VOLUMES" ,"N","0","025,035")
+MSCBLineV(33,60,50,4)
+
+MSCBSAY(35,61,"Conteudo:.'","N","0","025,035")
+MSCBSAY(35,66,"LIVROS"  ,"N","0","025,035")
+MSCBLineV(68,60,50,4)
+
+MSCBSAY(70,61,"Peso Bruto Nf:."    ,"N","0","025,035")
+MSCBSAY(70,66,Alltrim(Str(aNFiscal[1][3])) ,"N","0","025,035")
+MSCBLineH(03,70,97,4)
+
+MSCBSAY(05,71,"Pedido:."    ,"N","0","025,035")
+MSCBSAY(05,76,CB6->CB6_PEDIDO  ,"N","0","025,035")
+
+MSCBLineV(33,70,60,4)
+
+MSCBSAY(35,71,"Ord.Sep:."    ,"N","0","025,035")
+MSCBSAY(35,76,CB7->CB7_ORDSEP,"N","0","025,035")
+
+MSCBLineV(68,70,50,4)
+MSCBSAY(70,71,"Ped.Cliente:.","N","0","025,035")
+MSCBSAY(70,76,"0123456789"   ,"N","0","025,035")
+MSCBLineH(03,80,97,4) 
+
+MSCBSAY(05,83,"NF/Serie:. "+CB7->CB7_NOTA+" "+CB7->CB7_SERIE,"N","0","045,045")
+MSCBSAY(70,82,"Emissao:. ","N","0","025,035")
+MSCBSAY(70,86,Dtoc(aNFiscal[1][1]),"N","0","025,035")
+MSCBLineH(03,90,97,4)
+                          
+MSCBSAY(05,95,"V O L U M E (S):.  " ,"N","0","060,060")
+MSCBSAY(65,95,StrZero(nAtu,3)+"/"+StrZero(nTotEti,3) ,"N","0","060,060")
+
+MSCBSAYBAR(22,107,CB6->CB6_VOLUME,"N","MB07",9,.F.,.T.,.F.,,3,2,.F.,.F.,"1",.T.)
+
+
+
+//MSCBInfoEti("Volume Oficial","30X100")
+sConteudo:= MSCBEND()
+Return sConteudo
+//////////////////////////////////////////
+//Busca Cliente para impressao da etiqueta
+//Parametros: 1 - Nome Cliente
+//			  2 - Endereco
+//			  3 - Municipio
+//			  4 - Bairro
+//			  5 - Cep
+//			  6 - Estado
+//////////////////////////////////////////
+Static Function BusCli()
+Local aArea := GetArea()
+Local aDadosCli := {}
+
+DbSelectArea("SA1")
+DbSetOrder(1)
+If DbSeek(xFilial("SA1")+CB7->CB7_CLIENT+CB7->CB7_LOJA)
+Aadd(aDadosCli,{SA1->A1_NOME,;
+	SA1->A1_END,;
+	SA1->A1_MUN,;
+	SA1->A1_BAIRRO,;
+	SubStr(SA1->A1_CEP,1,5)+"-"+SubStr(SA1->A1_CEP,6,3),;
+	SA1->A1_EST})
+EndIf
+conout('aDadosCli')
+varinfo('aDadosCli',aDadosCli)
+
+RestArea(aArea)
+Return(aDadosCli) 
+//////////////////////////////////////////
+//Busca Nota Fiscal para impressao etiqueta
+//Parametros: 1 - Data de Emissao
+//			  2 - Peso Liquido NF
+//			  3 - Peso Bruto NF
+//////////////////////////////////////////
+
+Static Function BusNfs()
+Local aArea := GetArea()
+Local aDadosNfs := {}
+
+DbSelectArea("SF2")
+DbSetOrder(2)
+If DbSeek(xFilial("SF2")+CB7->CB7_CLIENT+CB7->CB7_LOJA+CB7->CB7_NOTA+CB7->CB7_SERIE)
+Aadd(aDadosNfs,{SF2->F2_EMISSAO,;
+	SF2->F2_PLIQUI,;
+	SF2->F2_PBRUTO})
+EndIf
+conout('aDadosNfs')
+varinfo('aDadosNfs',aDadosNfs)
+
+RestArea(aArea)
+Return(aDadosNfs)

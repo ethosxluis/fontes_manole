@@ -1,0 +1,14 @@
+1 - Jogue o arquivo XLS2DBF.xla na pasta SYSTEM da sua instalação do Protheus.
+2 - Adicione o fonte CargaXLS.PRW no seu projeto e compile.
+3 - Utilize o fonte abaixo como referência
+
+
+User Function Importa()
+
+Local aDados := U_CargaXLS(,,1,)
+
+For nLin := 1 To Len(aDados)
+	//aqui grava os dados que vem do excel para dentro do sistema
+Next
+
+Return

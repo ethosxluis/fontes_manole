@@ -1,0 +1,23 @@
+{
+	"folders": [],
+	"settings": {
+		"totvsLanguageServer.welcomePage": false,
+		"advpl.projectActive": "manole",
+		"advpl.selectedEnvironment": "d03",
+		"advpl.environments": [
+			{
+				"environment": "d03",
+				"name": "d03",
+				"server": "10.10.1.4",
+				"port": "12023",
+				"serverVersion": "191205P",
+				"passwordCipher": "aE9Udy9KQVhLWFhkcFlyc1pjSi9VNkRnNHVLOWNSUjBPWGNiQ0hvRkpKY3FGZW9tWlhxUjMzWkQ1cVI3N29HTjNmbnZEUktuS1NKeGdRTUIvbWM4bk4rY0x4N1l4S2hSTE0vUE13YkZXR0s3NitFQzgzaTQzenRFWVdvMWNmWjM=",
+				"includeList": "c:\\INCLUDE\\",
+				"user": "adm_wallace",
+				"smartClientPath": "c:\\P12-SMARTCLIENT_BUILD-19.3.0.5_WINDOWS_X64",
+				"enable": true,
+				"ssl": false
+			}
+		]
+	}
+}

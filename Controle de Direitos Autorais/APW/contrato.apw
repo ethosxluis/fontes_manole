@@ -1,0 +1,73 @@
+#include "protheus.ch"
+#include "apwebex.ch" 
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³CONTRATO  ºAutor  ³Leandro duarte      º Data ³  03/21/16   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³Rotina de analise do contrato para apresentar na web para o º±±
+±±º          ³Autor/Fornecedor                                            º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ p11                                                        º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+user function contrato()
+
+Local cChave	:= " "
+Local cCodEmp	:= "01"
+Local cCodFil	:= "01"
+Local aTables	:= {"AH1","AH2","AH3","AH4","UA2","SX5","SA2","SB1"}
+Local cHtml		:= " "
+Local cxPv		:= {"!","@","#","$","%","&","?","|","\","/"}
+Local xHR		:= REPLACE(TIME(),":","")
+Local nVt		:= SUBSTR(xHR,LEN(xHR)-1,1)
+Local nVtx		:= val(nVt)+1
+Local cComplPl	:= iif(nVtx==11,1,nVtx)
+Local xHR1		:= REPLACE(TIME(),":","")
+Local nVt1		:= SUBSTR(xHR1,LEN(xHR1)-1,1)
+Local nVtx1		:= val(nVt1)+2
+Local cComplP1	:= iif(nVtx1==11,1,nVtx1)
+Private cPalavra	:= criatrab(NIL,.F.)
+Private cNome	:= " "
+Private cCGC	:= " "
+Private cContrato	:= " "
+Private cSequenci	:= " "
+Private cTipoCont	:= " "
+Private cAutor	:= " "
+Private cMensaErro := ""
+Private cDoc		 := ""
+Private cLink		:= ""
+
+
+cPalavra := substr(cPalavra,1,3)+cxPv[cComplPl]+substr(cPalavra,4,3)+cxPv[cComplP1]+substr(cPalavra,7,2)
+
+RPCSetType( 3 )
+RpcSetEnv ( cCodEmp, cCodFil,,,"CDA",, aTables )
+
+Web Extended Init cHtml
+cContrato	:= u_trocar(HttpGet->cCT,1)
+cSequenci	:= u_trocar(HttpGet->cXSeq,1)
+cTipoCont	:= u_trocar(HttpGet->cTPO,1)
+cAutor		:= u_trocar(HttpGet->cAt,1)
+cLink		:= getnewpar("MV_LINKCDA","http://10.10.1.3:89")
+UA2->(dbSetOrder(2))
+if UA2->(dbSeek( xFilial( "UA2" ) + cContrato + cSequenci + cTipoCont ))
+	cChave := UA2->( UA2->UA2_CONTRA + UA2->UA2_SEQCON + UA2->UA2_TIPOCO )
+	While UA2->(!EOF()) .And. UA2->( UA2_FILIAL + UA2->UA2_CONTRA + UA2->UA2_SEQCON + UA2->UA2_TIPOCO ) == xFilial( "UA2" ) + cChave
+		if UA2->UA2_FORNEC == cAutor
+			cDoc		:= LOWER(alltrim(UA2->UA2_CONTRA)+alltrim(UA2->UA2_SEQCON)+alltrim(UA2->UA2_FORNEC)+alltrim(UA2->UA2_PRODUT))+'.dot'
+			cHtml		:= h_Contrato()
+			//cHtml		:= h_teste()
+		ENDIF
+		UA2->(dbskip())
+    end
+endif
+
+Web Extended End
+RpcClearEnv()
+Return cHtml

@@ -1,0 +1,43 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "totvs_language_debug",
+			"request": "launch",
+			"name": "TOTVS Language Debug",
+			"program": "${command:AskForProgramName}",
+			"cwb": "${workspaceFolder}",
+			"smartclientBin": "C:\\MANOLE\\smartclient_novo\\P12-SMARTCLIENT_BUILD-19.3.0.5_WINDOWS_X64\\smartclient.exe",
+			"isMultiSession": true,
+			"enableTableSync": true
+		}
+	],
+	"lastPrograms": [
+		{
+			"args": [],
+			"label": "sigacda",
+			"description": ""
+		},
+		{
+			"args": [],
+			"label": "sigaFAT",
+			"description": ""
+		},
+		{
+			"args": [],
+			"label": "sigaCTB",
+			"description": ""
+		},
+		{
+			"args": [],
+			"label": "U_MNSCH02",
+			"description": ""
+		},
+		{
+			"args": [],
+			"label": "sigacom",
+			"description": ""
+		}
+	],
+	"lastProgramExecuted": "sigaFAT"
+}
