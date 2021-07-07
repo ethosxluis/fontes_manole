@@ -9,7 +9,7 @@
 
 
 
-user function CALC_DA()
+user function CALDAFIM()
 
 
 
@@ -25,16 +25,17 @@ endif
 
 
 //U_LE_ARQS()
-Processa({|| U_LE_ARQS() },"Lendo os arquivos...","Aguarde.")
+//Processa({|| U_LE_ARQS2() },"Lendo os arquivos...","Aguarde.")
 
 
 //U_CALC()
-Processa({|| U_CALC() },"Calculando os Direitos Autorais...","Aguarde.")
+//Processa({|| U_CALC2() },"Calculando os Direitos Autorais...","Aguarde.")
 
 
 
 IF MV_PAR03 == 1
 //gera_tit()
+	Processa({|| U_LimpaP03() },"Ajustando os dados...","Aguarde.")
 	Processa({|| gera_tit() },"Gerando os titulos a pagar  dos Direitos Autorais...","Aguarde.")
 ENDIF
 
@@ -47,7 +48,7 @@ return()
 
 
 
-USER FUNCTION LE_ARQS()
+USER FUNCTION LE_ARQS2()
 
 Local _imes := 0
 
@@ -103,7 +104,7 @@ cquery := " "
 
 			If MsgYesNo("O fechamento do mês/ano "+MV_PAR01+"/"+MV_PAR02+" já foi executado, deseja refazer?")
 			    alert("Os registros que geraram títulos a pagar e foram baixados, não serão excluidos")
-				Processa({|| U_Limpa_P03() },"Ajustando os dados...","Aguarde.")
+				Processa({|| U_LimpaP03() },"Ajustando os dados...","Aguarde.")
 			else
 			  ruturn()
 			endif
@@ -121,21 +122,21 @@ _mesatual := MV_PAR01
 //*********************  CONTRATOS FINANCEIRO *************************************************
 
 //MENSAIS
-/*   cquery :=   " SELECT P04_CONTRA,P04_SEQCON,P04_FORNEC,P04_LOJAFO,P04_PRODUT,P04_PERIOD,D2_QUANT, "
+   cquery :=   " SELECT P04_CONTRA,P04_SEQCON,P04_FORNEC,P04_LOJAFO,P04_PRODUT,P04_PERIOD,D2_QUANT, "
    cquery  +=  " D2_PRUNIT PRUNIT, "
    cquery  +=  " D2_PRCVEN PRCVEN, "  
    cquery  +=  " D2_DOC, D2_CLIENTE, D2_LOJA,  "
    cquery  +=  " D2_SERIE,D2_ITEM,E1_EMISSAO,E1_BAIXA,E1_PARCELA " 
    cquery  +=  " FROM "+RetSQLName("P04")+" , "+RetSQLName("SD2")+" ,"+retsqlname("SE1")
    cquery  +=  " WHERE P04_PRODUT = D2_COD  "
-   cquery  +=  " AND P04_PERIOD = '01'  "
+//   cquery  +=  " AND P04_PERIOD = '01'  "
    cquery  +=  " AND D2_TES IN(SELECT F4_CODIGO FROM "+retsqlname("SF4")+ " WHERE F4_TIPOPER = '5' AND D_E_L_E_T_ <> '*')  "
    cquery  +=  " AND D2_EMISSAO BETWEEN '20200401' AND '20210331' " //considerar pagamento pelo financeiro de 01/04/2020 até 31/03/2021
    cquery  +=  " AND E1_SERIE = D2_SERIE "
    cquery  +=  " AND E1_NUM = D2_DOC "
    cquery  +=  " AND E1_CLIENTE = D2_CLIENTE "
    cquery  +=  " AND E1_LOJA = D2_LOJA "
-   cquery  +=  " AND E1_BAIXA  BETWEEN '"+dtos(_dtini)+"' AND '"+dtos(_dtfim)+"'"
+   cquery  +=  " AND E1_SALDO  > 0 "   
    cquery  +=  " AND "+RetSQLName("P04")+".D_E_L_E_T_ <> '*' "
    cquery  +=  " AND "+RetSQLName("SD2")+".D_E_L_E_T_ <> '*' "
    cquery  +=  " AND "+retsqlname("SE1")+".D_E_L_E_T_ <> '*' "
@@ -192,196 +193,15 @@ _mesatual := MV_PAR01
 		   DBSELECTAREA("TRB")
 		   dbskip()
 		enddo
-*/
 
 
-//*********************  CONTRATOS FATURAMENTO *************************************************
-
-// O RESULTADO DESTAS QUERYS VAI ALIMENTAR A TABELA P03
-//VENDAS MENSAL
-   cquery := " "  
-   cquery := " SELECT P04_CONTRA,P04_SEQCON,P04_FORNEC,P04_LOJAFO,P04_PRODUT,P04_PERIOD,SUM(D2_QUANT) AS QUANT,D2_PRUNIT,D2_PRCVEN "
-   cquery += " FROM "+RetSQLName("P04")+","+RetSQLName("SD2") 
-   cquery += " WHERE P04_PRODUT = D2_COD "
-   cquery += " AND P04_PERIOD = '01' "
-// cquery += " AND P04_XTPFAT = '1'" //calculo pelo FATURAMENTO
-   cquery += " AND D2_TES IN(SELECT F4_CODIGO FROM "+RetSQLName("SF4")+" WHERE F4_TIPOPER = '5' AND D_E_L_E_T_ <> '*') "
-   cquery += " and D2_EMISSAO BETWEEN '"+dtos(_dtini)+"' AND '"+dtos(_dtfim)+"'"
-   cquery += " AND "+RetSQLName("P04")+".D_E_L_E_T_ <> '*' "
-   cquery += " AND "+RetSQLName("SD2")+".D_E_L_E_T_ <> '*' "
-   cquery += " GROUP BY P04_CONTRA,P04_SEQCON,P04_FORNEC,P04_LOJAFO,P04_PRODUT,P04_PERIOD,D2_PRUNIT,D2_PRCVEN "
-   
-   	cQuery := ChangeQuery(cQuery)
-	
-	
-	if select("TRB")>0
-		TRB->(DBCLOSEAREA())
-	endif
-
-	dbUseArea( .T.,"TOPCONN",TCGENQRY(,,cQuery),"TRB",.F.,.T.)
-   
-		dbSelectArea("TRB")
-		dbGoTop()
-		
-		While TRB->(!Eof())
-		   DBSELECTAREA("P03")
-		   DBGOTOP()
-		   DBSETORDER(1)
-		   
-//		   IF !dbseek(xFilial("P03")  + MV_PAR02 + MV_PAR01 + TRB->P04_CONTRA + TRB->P04_SEQCON + TRB->P04_FORNEC + TRB->P04_LOJAFO + TRB->P04_PRODUT)
-		
-		   reclock("P03",.T.)
-		        P03_FILIAL  := xfilial() 
-	         	P03_MESANO  := _mesano
-	         	P03_CONTRA  := TRB->P04_CONTRA
-	         	P03_SEQCON  := TRB->P04_SEQCON
-	         	P03_FORNEC  := TRB->P04_FORNEC
-	         	P03_LOJAFO  := TRB->P04_LOJAFO
-	         	P03_PRODUT  := TRB->P04_PRODUT               
-	         	P03_PERIOD  := TRB->P04_PERIOD
-	         	P03_QTDE    := TRB->QUANT       
-	         	P03_PRUNIT  := TRB->QUANT * TRB->D2_PRUNIT      
-	         	P03_PRCVEN  := TRB->QUANT * TRB->D2_PRCVEN
-		  msunlock()
-/*		 ELSE
-		    reclock("P03",.F.)
-		       	P03_QTDE    += TRB->QUANT       
-	         	P03_PRUNIT  += (TRB->QUANT * TRB->D2_PRUNIT)      
-	         	P03_PRCVEN  += (TRB->QUANT * TRB->D2_PRCVEN)
-		    msunlock()
-		 ENDIF */
-		 
-	
-		   DBSELECTAREA("TRB")
-		   dbskip()
-		enddo
-
-////ACESSOS DIGITAIS
-
-   equery := " "  
-     equery := " SELECT P04_CONTRA,P04_SEQCON,P04_FORNEC,P04_LOJAFO,P04_PRODUT,P04_PERIOD,SUM(P01_QUANT) AS QUANT,P01_PRUNIT,P01_PRTAB  "
-     equery += " FROM "+RetSQLName("P04")+","+RetSQLName("P01")
-     equery += " WHERE P04_PRODUT = P01_COD  "
-     equery += " AND P04_PERIOD = '01' "
-     equery += " and P01_EMISS BETWEEN  '"+dtos(_dtini)+"' AND '"+dtos(_dtfim)+"'" 
-     equery += " AND "+RetSQLName("P04")+ ".D_E_L_E_T_ <> '*' "
-	 equery += " AND "+RetSQLName("P01")+ ".D_E_L_E_T_ <> '*' "
-
-     equery += " GROUP BY P04_CONTRA,P04_SEQCON,P04_FORNEC,P04_LOJAFO,P04_PRODUT,P04_PERIOD,P01_PRUNIT,P01_PRTAB  "
-   
-   	eQuery := ChangeQuery(eQuery)
-	
-	
-	if select("TRD")>0
-		TRD->(DBCLOSEAREA())
-	endif
-
-	dbUseArea( .T.,"TOPCONN",TCGENQRY(,,eQuery),"TRD",.F.,.T.)
-   
-		dbSelectArea("TRD")
-		dbGoTop()
-		
-		While TRD->(!Eof())
-		   DBSELECTAREA("P03")
-		   DBGOTOP()
-		   DBSETORDER(1)
-		   
-		   IF !dbseek(xFilial("P03")  + MV_PAR02 + MV_PAR01 + TRD->P04_CONTRA + TRD->P04_SEQCON + TRD->P04_FORNEC + TRD->P04_LOJAFO + TRD->P04_PRODUT)
-		
-		   reclock("P03",.T.)
-		        P03_FILIAL  := xfilial() 
-	         	P03_MESANO  := MV_PAR02 + MV_PAR01
-	         	P03_CONTRA  := TRD->P04_CONTRA
-	         	P03_SEQCON  := TRD->P04_SEQCON
-	         	P03_FORNEC  := TRD->P04_FORNEC
-	         	P03_LOJAFO  := TRD->P04_LOJAFO
-	         	P03_PRODUT  := TRD->P04_PRODUT               
-	         	P03_PERIOD  := TRD->P04_PERIOD
-	         	P03_QTDE    := TRD->QUANT       
-	         	P03_PRUNIT  := TRD->QUANT * TRD->P01_PRUNIT      
-	         	P03_PRCVEN  := TRD->QUANT * TRD->P01_PRTAB
-		  msunlock()
-		 ELSE
-		    reclock("P03",.F.)
-		       	P03_QTDE    += TRD->QUANT       
-	         	P03_PRUNIT  += (TRD->QUANT * TRD->P01_PRUNIT)      
-	         	P03_PRCVEN  += (TRD->QUANT * TRD->P01_PRTAB)
-		    msunlock()
-		 ENDIF 
-		 
-	
-		   DBSELECTAREA("TRD")
-		   dbskip()
-		enddo
-
-/////DEVOLUcoES
-   dquery := " "
-   dquery := " select P04_FILIAL,P04_CONTRA,P04_SEQCON,P04_FORNEC,P04_LOJAFO,P04_PRODUT,P04_PERIOD,D1_QUANT,D1_NFORI,D1_SERIORI,D1_FORNECE,D1_TES,D1_CF,D1_DTDIGIT,D2_PRUNIT,D2_PRCVEN "
-   dquery  +=  " FROM "+RetSQLName("P04")+" , "+RetSQLName("SD1")+" ,"+RetSQLName("SD2")
-   dquery += " WHERE P04_PRODUT  = D1_COD "
-   dquery += " AND P04_PERIOD = '01'"
-   dquery += " AND P04_FILIAL = D1_FILIAL "
-   dquery += " AND D1_TIPO IN('D','B') "
-   dquery += " AND SUBSTR(D1_CF,2,3) = '201' "
-   dquery += " AND D1_DTDIGIT BETWEEN '"+dtos(_dtini)+"' AND '"+dtos(_dtfim)+"' "
-   dquery += " AND D1_FILIAL = D2_FILIAL "
-   dquery += " AND D1_NFORI = D2_DOC "
-   dquery += " AND D1_SERIORI = D2_SERIE "
-   dquery += " AND D1_ITEMORI = D2_ITEM "
-   dquery += " AND D1_COD = D2_COD "
-   dquery += " AND "+RetSQLName("P04")+ ".D_E_L_E_T_ <> '*' "
-   dquery += " AND "+RetSQLName("SD1")+ ".D_E_L_E_T_ <> '*' "
-   dquery += " AND "+RetSQLName("SD2")+ ".D_E_L_E_T_ <> '*' "
-   dquery += " ORDER BY P04_FILIAL,P04_CONTRA,P04_SEQCON,P04_FORNEC,P04_LOJAFO,P04_PRODUT,P04_PERIOD "
-  
-  	if select("TRC")>0
-		TRC->(DBCLOSEAREA())
-	endif
-
-	dbUseArea( .T.,"TOPCONN",TCGENQRY(,,dQuery),"TRC",.F.,.T.) 
-   
-		dbSelectArea("TRC")
-		dbGoTop()
-		
-		While TRC->(!Eof())
-		   DBSELECTAREA("P03")
-		   DBGOTOP()
-		   DBSETORDER(1)
-		   
-		   IF !dbseek(xFilial("P03")  + MV_PAR02 + MV_PAR01 + TRC->P04_CONTRA + TRC->P04_SEQCON + TRC->P04_FORNEC + TRC->P04_LOJAFO + TRC->P04_PRODUT)
-		
-		   reclock("P03",.T.)
-		        P03_FILIAL  := xfilial() 
-	         	P03_MESANO  := MV_PAR02 + MV_PAR01
-	         	P03_CONTRA  := TRC->P04_CONTRA
-	         	P03_SEQCON  := TRC->P04_SEQCON
-	         	P03_FORNEC  := TRC->P04_FORNEC
-	         	P03_LOJAFO  := TRC->P04_LOJAFO
-	         	P03_PRODUT  := TRC->P04_PRODUT               
-	         	P03_PERIOD  := TRC->P04_PERIOD
-	         	P03_QTDEV   := TRC->D1_QUANT 
-	         	P03_PRUNID  := (TRC->D1_QUANT * TRB->D2_PRUNIT)      
-	         	P03_PRCVED  := (TRC->D1_QUANT * TRB->D2_PRCVEN)
-		  msunlock()
-		 ELSE
-		    reclock("P03",.F.)
-		       	P03_QTDDEV  += TRC->D1_QUANT       
-	         	P03_PRUNID  += (TRC->D1_QUANT * TRC->D2_PRUNIT)      
-	         	P03_PRCVED  += (TRC->D1_QUANT * TRC->D2_PRCVEN)
-		    msunlock()
-		 ENDIF 
-		 
-	
-		   DBSELECTAREA("TRC")
-		   dbskip()
-		enddo
 
 
 *********************MENSAIS************RODAR TODOS OS MESES*********FIM
-
+/*
 // verificao dos outros perodos que no so mensais
 
-   IF _mesatual$(GETMV("MV_DAPER02"))  //BIMESTRAIS
+//   IF _mesatual$(GETMV("MV_DAPER02"))  //BIMESTRAIS
    	
    		_period := "02"
 //		_dtini := ctod("01" + "/" + str(val(MV_PAR01) - 1) + "/" + MV_PAR02)
@@ -395,26 +215,26 @@ _mesatual := MV_PAR01
 		
 		_dtini2 := _dtini
 		_dtfim2 := lastday(_dtini2)
-/*		for _imes  := (month(_dtini2))  to _mesfim
+		for _imes  := (month(_dtini2))  to _mesfim
 			 calc_d2(_period,_dtini2,_dtfim2)
 			_dtini2 := MonthSum(_dtini2,1)
 			_dtfim2 := lastday(_dtini2)
 		next
-  */ 	
+   	
    	
    		
    		
    		
-   		calc_d2ft(_period,_dtini,_dtfim)
+//   		calc_d2(_period,_dtini,_dtfim)
    		calc_p01(_period,_dtini,_dtfim)
    		calc_dev(_period,_dtini,_dtfim)
 
 
 
 
-   ENDIF
+//   ENDIF
 
-   IF   _mesatual$(GETMV("MV_DAPER03"))  //TRIMESTRAIS
+//   IF   _mesatual$(GETMV("MV_DAPER03"))  //TRIMESTRAIS
 /*   	
 		_period := "03"
    		_dtini := MonthSub(ctod("01" + "/" + str(val(MV_PAR01)) + "/" + MV_PAR02),2)
@@ -423,7 +243,7 @@ _mesatual := MV_PAR01
    		calc_p01(_period,_dtini,_dtfim)		
    		calc_dev(_period,_dtini,_dtfim)
 */
-		_period := "03"
+/*		_period := "03"
    		_dtini := MonthSub(ctod("01" + "/" + str(val(MV_PAR01)) + "/" + MV_PAR02),2)
 		_dtfim := lastday(ctod("01" + "/" + MV_PAR01 + "/" + MV_PAR02))
 		
@@ -436,22 +256,22 @@ _mesatual := MV_PAR01
 		
 		_dtini2 := _dtini
 		_dtfim2 := lastday(_dtini2)
-/*		for _imes  := (month(_dtini2))  to _mesfim
+		for _imes  := (month(_dtini2))  to _mesfim
 			 calc_d2(_period,_dtini2,_dtfim2)
 			_dtini2 := MonthSum(_dtini2,1)
 			_dtfim2 := lastday(_dtini2)
 		next
-*/
-		calc_d2ft(_period,_dtini,_dtfim)
+
+//		calc_d2(_period,_dtini,_dtfim)
    		calc_p01(_period,_dtini,_dtfim)		
    		calc_dev(_period,_dtini,_dtfim)
 
 
 
 
-   ENDIF
+   //ENDIF
 	
-   IF _mesatual$(GETMV("MV_DAPER04"))  //QUADRIMESTRAIS
+//   IF _mesatual$(GETMV("MV_DAPER04"))  //QUADRIMESTRAIS
    	
 		_period := "04"
 //		_dtini := ctod("01" + "/" + str(val(MV_PAR01) - 3) + "/" + MV_PAR02)
@@ -465,22 +285,22 @@ _mesatual := MV_PAR01
 		
 		_dtini2 := _dtini
 		_dtfim2 := lastday(_dtini2)
-/*		for _imes  := (month(_dtini2))  to _mesfim
+		for _imes  := (month(_dtini2))  to _mesfim
 			 calc_d2(_period,_dtini2,_dtfim2)
 			_dtini2 := MonthSum(_dtini2,1)
 			_dtfim2 := lastday(_dtini2)
 		next
-*/
 
 
 
-		calc_d2ft(_period,_dtini_dtfim)
+
+//		calc_d2(_period,_dtini_dtfim)
 		calc_p01(_period,_dtini,_dtfim)
    		calc_dev(_period,_dtini,_dtfim)
 
-  ENDIF
+//  ENDIF
 	
-  IF  _mesatual$(GETMV("MV_DAPER06"))  //SEMESTRAIS
+//  IF  _mesatual$(GETMV("MV_DAPER06"))  //SEMESTRAIS
    	
 		_period := "06"
 //		_dtini := ctod("01" + "/" + str(val(MV_PAR01) - 5) + "/" + MV_PAR02)
@@ -496,21 +316,21 @@ _mesatual := MV_PAR01
 		_dtfim2 := lastday(_dtini2)
 		_imesfim := DateDiffMonth(_dtini,_dtfim) + 1
 		
-/*		for _imes  := 1  to _imesfim
+		for _imes  := 1  to _imesfim
 			 calc_d2(_period,_dtini2,_dtfim2)
 			_dtini2 := MonthSum(_dtini2,1)
 			_dtfim2 := lastday(_dtini2)
 		next
-*/	
+	
 	
 	
 		calc_d2ft(_period,_dtini,_dtfim)
    		calc_p01(_period,_dtini,_dtfim)
    		calc_dev(_period,_dtini,_dtfim)
  
-  ENDIF
+//  ENDIF
 	
-  IF _mesatual$(GETMV("MV_DAPER12"))  //ANUAIS
+//  IF _mesatual$(GETMV("MV_DAPER12"))  //ANUAIS
    	
 		_period := "12"
 //		_dtini := ctod("01" + "/" + str(val(MV_PAR01) - 11) + "/" + MV_PAR02)
@@ -525,25 +345,25 @@ _mesatual := MV_PAR01
 		_dtfim2 := lastday(_dtini2)
 		_imesfim := DateDiffMonth(_dtini,_dtfim) + 1
 		
-/*		for _imes  := 1  to _imesfim
+		for _imes  := 1  to _imesfim
 			 calc_d2(_period,_dtini2,_dtfim2)
 			_dtini2 := MonthSum(_dtini2,1)
 			_dtfim2 := lastday(_dtini2)
 		next
-*/	
 	
 	
-		calc_d2ft(_period,_dtini,_dtfim)
+	
+//		calc_d2(_period,_dtini,_dtfim)
    		calc_p01(_period,_dtini,_dtfim)
    		calc_dev(_period,_dtini,_dtfim)
-   ENDIF
+//   ENDIF
 
 
 //////////////////////////////////////////////////////////////
-/*static function calc_d2(_period,_dtini_dtfim)
+static function calc_d2(_period,_dtini_dtfim)
 
 //FINANCEIRO
-
+   
    cquery :=  " SELECT P04_CONTRA,P04_SEQCON,P04_FORNEC,P04_LOJAFO,P04_PRODUT,P04_PERIOD,D2_QUANT, "
    cquery  +=  " D2_PRUNIT, "
    cquery  +=  " D2_PRCVEN, "
@@ -558,7 +378,10 @@ _mesatual := MV_PAR01
    cquery  +=  " AND E1_NUM = D2_DOC "
    cquery  +=  " AND E1_CLIENTE = D2_CLIENTE "
    cquery  +=  " AND E1_LOJA = D2_LOJA "
-   cquery  +=  " AND E1_BAIXA  BETWEEN '"+dtos(_dtini2)+"' AND '"+dtos(_dtfim2)+"'"
+//   cquery  +=  " AND E1_CLIENTE <> '045421' "
+//   cquery  +=  " AND E1_BAIXA  BETWEEN '"+dtos(_dtini2)+"' AND '"+dtos(_dtfim2)+"'"
+   cquery  +=  " AND E1_SALDO > 0 "   
+//   cquery  +=  " AND P04_XTPFAT = '2'"
    cquery  +=  " AND "+RetSQLName("P04")+".D_E_L_E_T_ <> '*' "
    cquery  +=  " AND "+RetSQLName("SD2")+".D_E_L_E_T_ <> '*' "
    cquery  +=  " AND "+retsqlname("SE1")+".D_E_L_E_T_ <> '*' "
@@ -577,10 +400,20 @@ _mesatual := MV_PAR01
 		dbGoTop()
 
 		While TRB->(!Eof())
+/*
+		   _serie   := TRB->D2_SERIE
+		   _doc     := TRB->D2_DOC
+		   _cliente := TRB->D2_CLIENTE
+		   _lojacli := TRB->D2_LOJA
 
+		   _qtdparc := num_parc(_serie,_doc,_cliente,_lojacli)
+	*/	   
+//		   dbSelectArea("TRB")
+/*
 		   DBSELECTAREA("P03")
 		   DBGOTOP()
 		   DBSETORDER(3)
+
 
 		   IF !dbseek(xFilial("P03")  + MV_PAR02 + MV_PAR01 + TRB->P04_CONTRA + TRB->P04_SEQCON +TRB->P04_FORNEC+TRB->P04_LOJAFO+P03_PRODUT +TRB->D2_SERIE+TRB->D2_DOC+TRB->D2_CLIENTE+TRB->D2_LOJA+TRB->E1_PARCELA)   
 		   reclock("P03",.T.)
@@ -616,215 +449,14 @@ _mesatual := MV_PAR01
 		enddo
 
 		return()
-*/		
-
-///////////////////////FATURAMENTO
-
-static function calc_d2ft(_period,_dtini_dtfim)
-
-		if _dtini < ctod('01/04/2021')
-			_dtini3 := ctod('01/04/2021')
-		else
-			_dtini3 := _dtini
-		endif
-
-   	   
-		   
-		   cquery := " "  
-   		cquery := " SELECT P04_CONTRA,P04_SEQCON,P04_FORNEC,P04_LOJAFO,P04_PRODUT,P04_PERIOD,SUM(D2_QUANT) AS QUANT,D2_PRUNIT,D2_PRCVEN "
-   		cquery += " FROM "+RetSQLName("P04")+","+RetSQLName("SD2")
-   		cquery += " WHERE P04_PRODUT = D2_COD "
-   		cquery += " AND P04_PERIOD = '"+_period+"' "
-   		cquery += " AND D2_TES IN(SELECT F4_CODIGO FROM  "+RetSQLName("SF4")+ " WHERE F4_TIPOPER = '5' AND D_E_L_E_T_ <> '*') "
-   		cquery += " and D2_EMISSAO BETWEEN  '"+dtos(_dtini3)+"' AND '"+dtos(_dtfim)+"'"
-//		cquery += " AND D2_COD = '9788520446126' "
-//   		cquery += " and D2_EMISSAO BETWEEN  '20210401' AND '"+dtos(_dtfim)+"'"		   
-   		cquery += " AND "+RetSQLName("P04")+ ".D_E_L_E_T_ <> '*' "
-   		cquery += " AND "+RetSQLName("SD2")+ ".D_E_L_E_T_ <> '*' "
-   		cquery += " GROUP BY P04_CONTRA,P04_SEQCON,P04_FORNEC,P04_LOJAFO,P04_PRODUT,P04_PERIOD,D2_PRUNIT,D2_PRCVEN "
-   
-   		cQuery := ChangeQuery(cQuery)
-	
-	
-	if select("TRB")>0
-		TRB->(DBCLOSEAREA())
-	endif
-
-	dbUseArea( .T.,"TOPCONN",TCGENQRY(,,cQuery),"TRB",.F.,.T.)
-   
-		dbSelectArea("TRB")
-		dbGoTop()
 		
-		While TRB->(!Eof())
-		   DBSELECTAREA("P03")
-		   DBGOTOP()
-		   DBSETORDER(1)
-		   
-//		   IF !dbseek(xFilial("P03")  + MV_PAR02 + MV_PAR01 + TRB->P04_CONTRA + TRB->P04_SEQCON + TRB->P04_FORNEC + TRB->P04_LOJAFO + TRB->P04_PRODUT)
-		
-		   reclock("P03",.T.)
-		        P03_FILIAL  := xfilial() 
-	         	P03_MESANO  := _mesano
-	         	P03_CONTRA  := TRB->P04_CONTRA
-	         	P03_SEQCON  := TRB->P04_SEQCON
-	         	P03_FORNEC  := TRB->P04_FORNEC
-	         	P03_LOJAFO  := TRB->P04_LOJAFO
-	         	P03_PRODUT  := TRB->P04_PRODUT               
-	         	P03_PERIOD  := TRB->P04_PERIOD
-	         	P03_QTDE    := TRB->QUANT       
-	         	P03_PRUNIT  := TRB->QUANT * TRB->D2_PRUNIT      
-	         	P03_PRCVEN  := TRB->QUANT * TRB->D2_PRCVEN
-		  msunlock()
-/*		 ELSE
-		    reclock("P03",.F.)
-		       	P03_QTDE    += TRB->QUANT       
-	         	P03_PRUNIT  += (TRB->QUANT * TRB->D2_PRUNIT)      
-	         	P03_PRCVEN  += (TRB->QUANT * TRB->D2_PRCVEN)
-		    msunlock()
-		 ENDIF */
-		 
-	
-		   DBSELECTAREA("TRB")
-		   dbskip()
-		enddo
+*/
 
+//FUNCAO PARA CALCULAR OS DIREITOS AUTORAIS
+USER FUNCTION CALC2()
 
-return()
-
-static function calc_P01(_period,_dtini,_dtfim)
-
-////ACESSOS DIGITAIS
-
-   equery := " "  
-     equery := " SELECT P04_CONTRA,P04_SEQCON,P04_FORNEC,P04_LOJAFO,P04_PRODUT,P04_PERIOD,SUM(P01_QUANT) AS QUANT,P01_PRUNIT,P01_PRTAB  "
-     equery += " FROM "+RetSQLName("P04")+","+RetSQLName("P01")
-     equery += " WHERE P04_PRODUT = P01_COD  "
-     equery += " AND P04_PERIOD = '"+_period+"'"
-     equery += " and P01_EMISS BETWEEN  '"+dtos(_dtini)+"' AND '"+dtos(_dtfim)+"'" 
-     equery += " AND "+RetSQLName("P04")+ ".D_E_L_E_T_ <> '*' "
-	 equery += " AND "+RetSQLName("P01")+ ".D_E_L_E_T_ <> '*' "
-
-     equery += " GROUP BY P04_CONTRA,P04_SEQCON,P04_FORNEC,P04_LOJAFO,P04_PRODUT,P04_PERIOD,P01_PRUNIT,P01_PRTAB  "
-   
-   	eQuery := ChangeQuery(eQuery)
-	
-	
-	if select("TRD")>0
-		TRD->(DBCLOSEAREA())
-	endif
-
-	dbUseArea( .T.,"TOPCONN",TCGENQRY(,,eQuery),"TRD",.F.,.T.)
-   
-		dbSelectArea("TRD")
-		dbGoTop()
-		
-		While TRD->(!Eof())
-		   DBSELECTAREA("P03")
-		   DBGOTOP()
-		   DBSETORDER(1)
-		   
-		   IF !dbseek(xFilial("P03")  + MV_PAR02 + MV_PAR01 + TRD->P04_CONTRA + TRD->P04_SEQCON + TRD->P04_FORNEC + TRD->P04_LOJAFO + TRD->P04_PRODUT)
-		
-		   reclock("P03",.T.)
-		        P03_FILIAL  := xfilial() 
-	         	P03_MESANO  := MV_PAR02 + MV_PAR01
-	         	P03_CONTRA  := TRD->P04_CONTRA
-	         	P03_SEQCON  := TRD->P04_SEQCON
-	         	P03_FORNEC  := TRD->P04_FORNEC
-	         	P03_LOJAFO  := TRD->P04_LOJAFO
-	         	P03_PRODUT  := TRD->P04_PRODUT               
-	         	P03_PERIOD  := TRD->P04_PERIOD
-	         	P03_QTDE    := TRD->QUANT       
-	         	P03_PRUNIT  := TRD->QUANT * TRD->P01_PRUNIT      
-	         	P03_PRCVEN  := TRD->QUANT * TRD->P01_PRTAB
-		  msunlock()
-		 ELSE
-		    reclock("P03",.F.)
-		       	P03_QTDE    += TRD->QUANT       
-	         	P03_PRUNIT  += (TRD->QUANT * TRD->P01_PRUNIT)      
-	         	P03_PRCVEN  += (TRD->QUANT * TRD->P01_PRTAB)
-		    msunlock()
-		 ENDIF 
-		 
-	
-		   DBSELECTAREA("TRD")
-		   dbskip()
-		enddo
-
-
-return()
-
-static function calc_dev(_period,_dtini,_dtfim)
-
-/////DEVOLUcoES
-   dquery := " "
-   dquery := " select P04_FILIAL,P04_CONTRA,P04_SEQCON,P04_FORNEC,P04_LOJAFO,P04_PRODUT,P04_PERIOD,D1_QUANT,D1_NFORI,D1_SERIORI,D1_FORNECE,D1_TES,D1_CF,D1_DTDIGIT,D2_PRUNIT,D2_PRCVEN "
-   dquery  +=  " FROM "+RetSQLName("P04")+" , "+RetSQLName("SD1")+" ,"+RetSQLName("SD2")
-
-   dquery += " WHERE P04_PRODUT  = D1_COD "
-   dquery += " AND P04_PERIOD = '"+_period+"'"
-   dquery += " AND P04_FILIAL = D1_FILIAL "
-   dquery += " AND D1_TIPO IN('D','B') "
-   dquery += " AND SUBSTR(D1_CF,2,3) = '201' "
-   dquery += " AND D1_DTDIGIT BETWEEN '"+dtos(_dtini)+"' AND '"+dtos(_dtfim)+"' "
-   dquery += " AND D1_FILIAL = D2_FILIAL "
-   dquery += " AND D1_NFORI = D2_DOC "
-   dquery += " AND D1_SERIORI = D2_SERIE "
-   dquery += " AND D1_ITEMORI = D2_ITEM "
-   dquery += " AND D1_COD = D2_COD "
-   dquery += " AND "+RetSQLName("P04")+ ".D_E_L_E_T_ <> '*' "
-   dquery += " AND "+RetSQLName("SD1")+ ".D_E_L_E_T_ <> '*' "
-   dquery += " AND "+RetSQLName("SD2")+ ".D_E_L_E_T_ <> '*' "
-   dquery += " ORDER BY P04_FILIAL,P04_CONTRA,P04_SEQCON,P04_FORNEC,P04_LOJAFO,P04_PRODUT,P04_PERIOD "
-  
-  	if select("TRC")>0
-		TRC->(DBCLOSEAREA())
-	endif
-
-	dbUseArea( .T.,"TOPCONN",TCGENQRY(,,dQuery),"TRC",.F.,.T.) 
-   
-		dbSelectArea("TRC")
-		dbGoTop()
-		
-		While TRC->(!Eof())
-		   DBSELECTAREA("P03")
-		   DBGOTOP()
-		   DBSETORDER(1)
-		   
-		   IF !dbseek(xFilial("P03")  + MV_PAR02 + MV_PAR01 + TRC->P04_CONTRA + TRC->P04_SEQCON + TRC->P04_FORNEC + TRC->P04_LOJAFO + TRC->P04_PRODUT)
-		
-		   reclock("P03",.T.)
-		        P03_FILIAL  := xfilial() 
-	         	P03_MESANO  := MV_PAR02 + MV_PAR01
-	         	P03_CONTRA  := TRC->P04_CONTRA
-	         	P03_SEQCON  := TRC->P04_SEQCON
-	         	P03_FORNEC  := TRC->P04_FORNEC
-	         	P03_LOJAFO  := TRC->P04_LOJAFO
-	         	P03_PRODUT  := TRC->P04_PRODUT               
-	         	P03_PERIOD  := TRC->P04_PERIOD
-	         	P03_QTDEV   := TRC->D1_QUANT 
-	         	P03_PRUNID  := (TRC->D1_QUANT * TRB->D2_PRUNIT)      
-	         	P03_PRCVED  := (TRC->D1_QUANT * TRB->D2_PRCVEN)
-		  msunlock()
-		 ELSE
-		    reclock("P03",.F.)
-		       	P03_QTDDEV  += TRC->D1_QUANT       
-	         	P03_PRUNID  += (TRC->D1_QUANT * TRC->D2_PRUNIT)      
-	         	P03_PRCVED  += (TRC->D1_QUANT * TRC->D2_PRCVEN)
-		    msunlock()
-		 ENDIF 
-		 
-	
-		   DBSELECTAREA("TRC")
-		   dbskip()
-		enddo
-
-
-return()
-
-
-USER FUNCTION CALC()
-
+//DBSELECTAREA("P03")
+//DBSETORDER(3) //P03_FILIAL+P03_MESANO+P03_CONTRA+P03_SEQCON+P03_PRODUT+P03_SERIE+P03_DOC+P03_CLIENT+P03_LOJCLI+P03_PARC   
 
 DBSELECTAREA("P03")
 DBSETORDER(2)
@@ -938,14 +570,14 @@ Return(_perc,_prc)
 
 
 
-USER FUNCTION LIMPA_P03()
+USER FUNCTION LIMPAP03()
 
 
 			//apago os registros da P03 processados anteriormente
-			cquery := " "
+/*			cquery := " "
 			cquery := " UPDATE  "+retsqlname("P03")+" SET D_E_L_E_T_ = '*' WHERE P03_MESANO ='"+MV_PAR02 + MV_PAR01 +"' and P03_TITULO NOT IN(SELECT E2_NUM FROM "+retsqlname("SE2")+" WHERE E2_FORNECE = P03_FORNEC  AND E2_LOJA = P03_LOJAFO  AND E2_BAIXA <> ' ' AND E2_VALOR <> E2_SALDO AND E2_EMISSAO = '"+dtos(_dtfim)+"' AND E2_ORIGEM = 'CALC_DA' AND D_E_L_E_T_ <> '*') "
 			TcsqlExec(cquery)
-
+*/
     cquery := " "
       cquery := " SELECT E2_PREFIXO,E2_NUM,E2_TIPO,E2_NATUREZ,E2_PORTADO,E2_FORNECE,E2_LOJA,E2_NOMFOR,E2_EMISSAO,E2_VENCTO,E2_VENCORI,E2_VENCREA,E2_VALOR,E2_SALDO,E2_BCOPAG,E2_EMIS1,E2_VLCRUZ,E2_HIST,E2_ORIGEM,E2_MOEDA,E2_PARCELA,E2_DIRF,E2_CODRET,E2_LA "
       	cquery += " FROM "+retsqlname("SE2")
@@ -1065,6 +697,12 @@ IF TRB->VLRDA > 0
 	    _naturez := "50066"
 	endif
 
+IF TRB->P03_FORNEC = 'A00184'
+  msgstop("A00184")
+ENDIF
+
+
+
               _vencto := _dtfim + 20            
 		aGrvSe2	:=	{	{ "E2_FILIAL"	, xFilial("SE2")								, Nil },;
 			{ "E2_PREFIXO"	, Iif(TRB->A2_TIPO=="X","RYE","RYI")						, Nil },;
@@ -1099,7 +737,7 @@ IF TRB->VLRDA > 0
 		MsExecAuto({ | a,b,c | Fina050(a,b,c) },aGrvSe2,,3)
 		If lMsErroAuto
 			mostraErro()
-			Exit
+//			Exit
 		Else
 			DBSELECTAREA("TRB")
 			tquery := " UPDATE  "+retsqlname("P03")+" SET P03_TITULO = '"+strzero((val(cnumero) + 1),9)+"' WHERE P03_FORNEC = '"+TRB->P03_FORNEC +"' AND P03_VLRDA > 0 AND P03_LOJAFO ='"+TRB->P03_LOJAFO+"'AND P03_MESANO = '"+TRB->P03_MESANO+"'"

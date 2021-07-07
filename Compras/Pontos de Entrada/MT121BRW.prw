@@ -7,6 +7,8 @@ Local aGrupos := UsrRetGrp(cUserName)	// Carrega os grupos do usuário
 Local cGrpLib := SuperGetMV("MN_GRPLIB")	
 Local cGrpImp := SuperGetMV("MN_GRPIMP")	
 Local cGrpCur := SuperGetMV("MN_GRPCUR") 
+Local cGrpCcl := SuperGetMV("MN_GRPCCL") 
+
 
 Local nI := 0
 
@@ -17,7 +19,7 @@ Local nI := 0
 // 3. Usado pela rotina                                        
 // 4. Tipo de Transação a ser efetuada                         
 //    1 - Pesquisa e Posiciona em um Banco de Dados            
-//    2 - Simplesmente Mostra os Campos                        
+//    2 - Simplesmente Mo5stra os Campos                        
 //    3 - Inclui registros no Bancos de Dados                  
 //    4 - Altera o registro corrente                           
 //    5 - Remove o registro corrente do Banco de Dados         
@@ -32,6 +34,8 @@ For nI := 1 to Len(aGrupos)
 	//Grupo Manole Livros - producao e grafica
 	Elseif aGrupos[nI] == cGrpImp
 		aadd(aRotina,{"Imprimir Contrato" , "U_COMR001",0,2,0, nil})
+	//Grupo Manole Livros - grupo para poder mudar o status do pedidos para concluido
+	Elseif aGrupos[nI] == cGrpCcl
 		aadd(aRotina,{"Contrato Concluido", "U_MNCOMA04",0,2,0, nil})
 		
 	//Grupo Manole Educacao - Prestacao de serviços - em que todos podem imprimir

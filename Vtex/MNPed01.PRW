@@ -35,7 +35,7 @@ Local lPedOk 	:= .T.
 Local nFor1		:= 0
 Local nFor2		:= 0
 Local lDisEmail	:= .T.
-Local aTables := {"PAE","SF2","SD2","SF1","SD1","SE1","SA1","SA2","SE2","SD3","SL1","SL2","SL3","SL4","UA1","CC2","SB1","SB2","SC9"}
+Local aTables := {"PAE","SF2","SD2","SF1","SD1","SE1","SA1","SA2","SE2","SD3","SL1","SL2","SL3","SL4","UA1","CC2","SB1","SB2","SC9","AFA","AF9"}
 
 Local cErItNgC	:= "ecommerce@manole.com.br;lazaro@manole.com.br;wallace.pereira@ethosx.com;t.i@manole.com.br"
 Local cErItNgL	:= "ecommerce@manole.com.br;lazaro@manole.com.br;wallace.pereira@ethosx.com;t.i@manole.com.br"
@@ -629,6 +629,9 @@ if nScan1 > 0 .and. nScan2 > 0
 				lDisEmail := .T.
 //				lDisEmail  := STARTJOB('U_grvPedJB',GetEnvServer(),.T.,{ SM0->M0_CODIGO, SM0->M0_CODFIL, aTables, aGrvSC5,aItensSC6,NOPC,cVTex,GRVCPED->(RECNO()),GRVDPED->(RECNO()),aNomeTab[nScan1][2],aNomeTab[nScan2][2],lPedOk,_cFilant})
 
+			
+//			MSGSTOP("CHAMADA DO GRVPEDJB")
+			
 			if _cFilant == "01"
 					lDisEmail  := STARTJOB('U_grvPedJB',GetEnvServer(),.T.,{ SM0->M0_CODIGO, "01", aTables, aGrvSC5,aItensSC6,NOPC,cVTex,GRVCPED->(RECNO()),GRVDPED->(RECNO()),aNomeTab[nScan1][2],aNomeTab[nScan2][2],lPedOk,_cFilant})
 			else
@@ -1676,6 +1679,9 @@ Private lWin 	:= file('c:\windows')
 Private cArqPd 	:= iif(lWin,"\imp_vtex\","/imp_vtex/")
 Private cNomArq	:= dtos(date())+replace(time(),':','')
 
+
+//msgstop("GRVPEDJB")
+
 if nCli > 0
 	cCli := aGrvSC5[nCli][2]
 endif
@@ -1734,6 +1740,10 @@ IF LEN(aItensSC6) > 0
 			next nFor
 			MSUNLOCK()
 			FOR nFor := 1 to len(aItensSC6)
+
+				DBSELECTAREA("AF9")
+				AF9->(DBORDERNICKNAME("PDTO"))
+
 				DBSELECTAREA("SC6")
 				SC6->(DBORDERNICKNAME("VTEX"))
 				nItem	:= ascan(aItensSC6[nFor],{|z| alltrim(z[1]) == "C6_ITEM"})
@@ -1758,6 +1768,23 @@ IF LEN(aItensSC6) > 0
 					EndIf
 				EndIf
 				//Conout('MNPED01.PRW - 00201 - Verifica descrição do Produto: ' )//+  SC6->C6_VTEX + ' - ' + SC6->C6_PRODUTO + ' - ' + SC6->C6_DESCRI)	
+/////// ALIMENTAÇÃO DOS CAMPOS DO PMS
+//			SC6->C6_DESCRI 	:= Posicione("SB1",1,xFilial("SB1")+padr(aItensSC6[nFor][nProd][2],tamsx3("C6_PRODUTO")[1]),"B1_DESC")		
+			SC6->C6_PROJPMS := Posicione("AFA",7,xfilial("AFA")+padr(aItensSC6[nFor][nProd][2],tamsx3("C6_PRODUTO")[1]),"AFA_PROJET")
+			if empty(SC6->C6_PROJPMS)
+			   			SC6->C6_PROJPMS := Posicione("AF9",,xfilial("AF9")+padr(aItensSC6[nFor][nProd][2],tamsx3("C6_PRODUTO")[1]),"AF9_PROJET")			
+			endif
+			SC6->C6_TASKPMS := Posicione("AF9",,xfilial("AF9")+padr(aItensSC6[nFor][nProd][2],tamsx3("C6_PRODUTO")[1]),"AF9_TAREFA")
+			SC6->C6_EDTPMS  := Posicione("AF9",,xfilial("AF9")+padr(aItensSC6[nFor][nProd][2],tamsx3("C6_PRODUTO")[1]),"AF9_PROJET") 
+
+
+
+
+/////ATÉ AQUI
+
+
+
+
 				
 				MSUNLOCK()
 				GRVDPED->(dbSeek(cVTex+padr(aItensSC6[nFor][nProd][2],tamsx3("C6_PRODUTO")[1])+padr(aItensSC6[nFor][nItem][2],tamsx3("C6_ITEM")[1])+"0"))

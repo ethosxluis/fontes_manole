@@ -29,7 +29,7 @@ Local cErrMail2  := "consignacao@manole.com.br; financeiro.cr@manole.com.br; eco
 Local cErrMail3  := "cobrancas@manole.com.br; financeiro.cr@manole.com.br; "										
 Local cErrMail6  := "anderson@manole.com.br;financerio.cr@manole.com.br;cobrancas@manole.com.br;"
 Local cEMailFis	 := "anderson@manole.com.br;financerio.cr@manole.com.br;cobrancas@manole.com.br;"
-Local cErrMailA  := "wallace.pereira@ethosx.com;"
+//Local cErrMailA  := "wallace.pereira@ethosx.com;"
 
 Local cQuery1	:= ""
 Local cQuery2	:= ""
@@ -69,7 +69,7 @@ dbUseArea(.T., "TOPCONN", TcGenQry(,, cQuery1),cAlias1, .T., .T.)
 While !(cAlias1)->(Eof())
 
 		U_EXPMAIL(cErrMail1, "Status de Nota Protheus x Sefaz , verifique NOTA: "+(cAlias1)->F1_DOC+" - "+(cAlias1)->F1_SERIE, "Favor, verificar a Nota "+(cAlias1)->F1_DOC+" - "+(cAlias1)->F1_SERIE+" para que seja atualizado de acordo com o Sefaz. ")
-		U_EXPMAIL(cErrMailA, "Status de Nota Protheus x Sefaz , verifique NOTA: "+(cAlias1)->F1_DOC+" - "+(cAlias1)->F1_SERIE, "Favor, verificar a Nota "+(cAlias1)->F1_DOC+" - "+(cAlias1)->F1_SERIE+" para que seja atualizado de acordo com o Sefaz. ")
+//		U_EXPMAIL(cErrMailA, "Status de Nota Protheus x Sefaz , verifique NOTA: "+(cAlias1)->F1_DOC+" - "+(cAlias1)->F1_SERIE, "Favor, verificar a Nota "+(cAlias1)->F1_DOC+" - "+(cAlias1)->F1_SERIE+" para que seja atualizado de acordo com o Sefaz. ")
 
 	(cAlias1)->(dbSkip())
 EndDo
@@ -98,7 +98,7 @@ dbUseArea(.T., "TOPCONN", TcGenQry(,, cQuery2),cAlias2, .T., .T.)
 While !(cAlias2)->(Eof())
 
 		U_EXPMAIL(cErrMail2, "Status de Nota Protheus x Sefaz , verifique NOTA: "+(cAlias2)->F2_DOC+" - "+(cAlias2)->F2_SERIE, "Favor, verificar a Nota "+(cAlias2)->F2_DOC+" - "+(cAlias2)->F2_SERIE+" para que seja atualizado de acordo com o Sefaz. ")
-		U_EXPMAIL(cErrMailA, "Status de Nota Protheus x Sefaz , verifique NOTA: "+(cAlias2)->F2_DOC+" - "+(cAlias2)->F2_SERIE, "Favor, verificar a Nota "+(cAlias2)->F2_DOC+" - "+(cAlias2)->F2_SERIE+" para que seja atualizado de acordo com o Sefaz. ")
+//		U_EXPMAIL(cErrMailA, "Status de Nota Protheus x Sefaz , verifique NOTA: "+(cAlias2)->F2_DOC+" - "+(cAlias2)->F2_SERIE, "Favor, verificar a Nota "+(cAlias2)->F2_DOC+" - "+(cAlias2)->F2_SERIE+" para que seja atualizado de acordo com o Sefaz. ")
 
 	(cAlias2)->(dbSkip())
 EndDo
@@ -126,7 +126,7 @@ dbUseArea(.T., "TOPCONN", TcGenQry(,, cQuery3),cAlias3, .T., .T.)
 While !(cAlias3)->(Eof())
 
 		U_EXPMAIL(cErrMail3, "Status de Nota Protheus x Prefeitura , verifique NOTA: "+(cAlias3)->F2_DOC+" - "+(cAlias3)->F2_SERIE, "Favor, verificar a Nota "+(cAlias3)->F2_DOC+" - "+(cAlias3)->F2_SERIE+" para que seja atualizado de acordo com a Prefeitura. ")
-		U_EXPMAIL(cErrMailA, "Status de Nota Protheus x Prefeitura , verifique NOTA: "+(cAlias3)->F2_DOC+" - "+(cAlias3)->F2_SERIE, "Favor, verificar a Nota "+(cAlias3)->F2_DOC+" - "+(cAlias3)->F2_SERIE+" para que seja atualizado de acordo com a Prefeitura. ")
+//		U_EXPMAIL(cErrMailA, "Status de Nota Protheus x Prefeitura , verifique NOTA: "+(cAlias3)->F2_DOC+" - "+(cAlias3)->F2_SERIE, "Favor, verificar a Nota "+(cAlias3)->F2_DOC+" - "+(cAlias3)->F2_SERIE+" para que seja atualizado de acordo com a Prefeitura. ")
 
 	(cAlias3)->(dbSkip())
 EndDo
@@ -158,7 +158,7 @@ dbUseArea(.T., "TOPCONN", TcGenQry(,, cQuery4),cAlias4, .T., .T.)
 While !(cAlias4)->(Eof())
 
 		U_EXPMAIL(cErrMail1, "Status de Nota Protheus x Sefaz , CONSULTE a nota no MONITOR FAIXA: "+(cAlias4)->F3_NFISCAL+" - "+(cAlias4)->F3_SERIE, "Favor, verificar a Nota "+(cAlias4)->F3_NFISCAL+" - "+(cAlias4)->F3_SERIE+" no MONITOR, FAIXA, para que seja atualizado de acordo com o Sefaz. ")
-		U_EXPMAIL(cErrMailA, "Status de Nota Protheus x Sefaz , CONSULTE a nota no MONITOR FAIXA: "+(cAlias4)->F3_NFISCAL+" - "+(cAlias4)->F3_SERIE, "Favor, verificar a Nota "+(cAlias4)->F3_NFISCAL+" - "+(cAlias4)->F3_SERIE+" no MONITOR, FAIXA, para que seja atualizado de acordo com o Sefaz. ")
+//		U_EXPMAIL(cErrMailA, "Status de Nota Protheus x Sefaz , CONSULTE a nota no MONITOR FAIXA: "+(cAlias4)->F3_NFISCAL+" - "+(cAlias4)->F3_SERIE, "Favor, verificar a Nota "+(cAlias4)->F3_NFISCAL+" - "+(cAlias4)->F3_SERIE+" no MONITOR, FAIXA, para que seja atualizado de acordo com o Sefaz. ")
 
 	(cAlias4)->(dbSkip())
 EndDo
@@ -265,7 +265,8 @@ User Function ExpMail( cTo, cSubject, cBody, cFile )
 
 Local lAuth         := .T.									//GetMv("MN_CSGAUTH")	//.T.
 Local cMailConta	:= "acertos@manole.com.br"				//Alltrim(GetMv("MN_CSGCONT"))
-Local cMailSenha	:= "@c3rt05!+"							//"mnl!1969" 		//Alltrim(GetMv("MN_CSGSENH"))
+//Local cMailSenha	:= "@c3rt05!+"							//"mnl!1969" 		//Alltrim(GetMv("MN_CSGSENH"))
+Local cMailSenha	:= "wegksmehdrfrfevf"							//"mnl!1969" 		//Alltrim(GetMv("MN_CSGSENH"))
 Local cMailServer	:= "smtp.gmail.com:587"					//Alltrim(GetMv("MN_CSGSERV"))
 local nRelTime 	    := 300									//GetMv("MN_CSGTIME")	//300	
 Local lSSL	        := .T.									//GetMv("MN_CSGSSL")	//.T. 

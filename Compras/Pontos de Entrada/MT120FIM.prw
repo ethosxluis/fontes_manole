@@ -30,14 +30,14 @@ If nOpcao == 3 .OR. nOpcao == 4
 		SC7->(MsUnlock())
 //////////////		
 
-   if SC7->C7_CC <> ' '
+/*   if  SB1->B1_CUSTEI == 'S'
 		
 		DBSELECTAREA("SB2")
-		if !dbseek(SC7->C7_FILIAL+SC7->C7_PRODUTO+SC7->C7_LOCAL)
+		if !dbseek(SC7->C7_FILIAL+SC7->C7_PRODUTO+"15")
 			reclock("SB2",.T.)
 			  SB2->B2_FILIAL := SC7->C7_FILIAL
 			  SB2->B2_COD    := SC7->C7_PRODUTO
-			  SB2->B2_LOCAL  := SC7->C7_LOCAL
+			  SB2->B2_LOCAL  := "15"
 			  SB2->B2_QATU   := SC7->C7_QUANT
 			msunlock()
 		else
@@ -45,10 +45,22 @@ If nOpcao == 3 .OR. nOpcao == 4
 			  SB2->B2_QATU  += SC7->C7_QUANT
 			msunlock()
 		endif
+
+		DBSELECTAREA("SD3")
+
+		RECLOCK("SD3",.T.)
+			SD3->D3_FILIAL := xfilial()
+			SD3->D3_TM    := "001"
+			SD3->D3_COD   := SC7->C7_PRODUTO
+			SD3->D3_QUANT := SC7->C7_QUANT
+			SD3->D3_LOCAL := "15"
+			SD3->D3_EMISSAO := DDATABASE
+		MSUNLOCK()
+
 	
 		DBSELECTAREA("SC7")
 
-	endif
+	endif*/
 /////////////
 		SC7->(DbSkip())
 	Enddo

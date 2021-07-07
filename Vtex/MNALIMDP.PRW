@@ -46,7 +46,9 @@ Local cCGCExt	:= .F.
 Local cTipo     := ""
 Local cTP     := ""
 
-Local cNum001	:="MZN-701-4413518-8577030"
+//Local cNum001	:= "1104513140314-01"
+//Local cNum001	:= "1131191122424-01"
+Local cNum001	:= "MZN-701-6549996-2961805"
 //"1051502523693-01"
 //"1037151541784-01" 
 //"1035550654396-01/1035553408070-01/1035553032770-01/1035553032770-01"
@@ -55,9 +57,17 @@ Local cNum001	:="MZN-701-4413518-8577030"
 //"1024840932156-01   "
 //"1023700848501-01"//"1021563335208-01/1021562922646-01/1021562922646-01/1021592992500-01/1021602850463-01/1021601987573-01/1021591435474-01/1021590264324-01/1021591110541-01"
 
-Local cNum002	:= "SKY-"
-Local cNum003	:= ""
-Local cNum004 	:= ""
+Local cNum002	:= "MZN-702-8725136-7933009"
+//Local cNum003	:= "1131192717859-01"
+Local cNum003	:= "MZN-702-8725136-7933009"
+//Local cNum004 	:= "1131160638810-01"
+Local cNum004 	:= "MZN-701-3390060-9691414"
+Local cNum005   := "1131160152748-01"
+Local cNum006   := "1131301306559-01"
+Local cNum007   := "1131163038976-01"
+Local cNum008   := "MZN-702-6213683-1793053"
+Local cNum009   := "1131182370485-01"
+Local cNum010   := "1131183041608-01"
 Local cNumSKY	:= "SKY-"
 
 private cParam   := ""
@@ -90,20 +100,70 @@ lXml := FWJsonDeserialize(sPostRet,@oxml)
 //SE HOUVEREM PEDIDOS A SEREM PROCESSADOS
 if lXml
 	oXmlList := oxml:LIST
+//	oXmlList := {"1125562856049-01","1125562999780-01","1125563004732-01","1125563075402-01","1125563145833-01","1125563266750-01","1125563275018-01","1125563279748-01","1125563341581-01","1125570019880-01","1125570666680-01","1125570988457-01","1125571193260-01","1125571453744-01","1125631640673-01","1125633374850-01","1125642588144-01","1125643207608-01","1125650988080-01","1125653506880-01","1125690640721-01","1125690825212-01","1126312952803-01","1125702120480-01","1125820379673-01","1125840470447-01","1125872519755-01","1125882712392-01","1125892602289-01","1125901940400-01","1125903370688-01"}	
+	
 	if Len(oXmlList) > 0
 		For I := 1 to Len(oXmlList)
 			cNumPed	:= oXmlList[I]:OrderId
+//			cNumPed	:= oXmlList[I]
+
 			//cUrlPed := "http://oms.vtexcommerce.com.br/api/oms/pvt/orders/"+cNumPed+"/?an=manole"
 			
 			//Edmar Mendes do Prado
 			//03/08/2018
 			conout('Numero de Pedido a Processar: '+cNumPed)
 			
-			cNumped := "1122081380356-01"
+
+
+
+//			cNumped := "1140471959678-01"
 			If cNumPed $ cNum001 // .Or. (cNumPed $ Alltrim(cNum002)) .Or. (cNumPed $ Alltrim(cNum003))  .Or. (cNumPed $ Alltrim(cNum004)))
 				conout('Pedido LOOP em CNUM001: '+cNumPed)
 				Loop
 			EndIf
+			If cNumPed $ cNum003 // .Or. (cNumPed $ Alltrim(cNum002)) .Or. (cNumPed $ Alltrim(cNum003))  .Or. (cNumPed $ Alltrim(cNum004)))
+				conout('Pedido LOOP em CNUM003: '+cNumPed)
+				Loop
+			EndIf
+
+			If cNumPed $ cNum004 // .Or. (cNumPed $ Alltrim(cNum002)) .Or. (cNumPed $ Alltrim(cNum003))  .Or. (cNumPed $ Alltrim(cNum004)))
+				conout('Pedido LOOP em CNUM004: '+cNumPed)
+				Loop
+			EndIf
+
+			If cNumPed $ cNum005 // .Or. (cNumPed $ Alltrim(cNum002)) .Or. (cNumPed $ Alltrim(cNum003))  .Or. (cNumPed $ Alltrim(cNum004)))
+				conout('Pedido LOOP em CNUM005: '+cNumPed)
+				Loop
+			EndIf
+
+			If cNumPed $ cNum006 // .Or. (cNumPed $ Alltrim(cNum002)) .Or. (cNumPed $ Alltrim(cNum003))  .Or. (cNumPed $ Alltrim(cNum004)))
+				conout('Pedido LOOP em CNUM006: '+cNumPed)
+				Loop
+			EndIf
+
+			If cNumPed $ cNum007 // .Or. (cNumPed $ Alltrim(cNum002)) .Or. (cNumPed $ Alltrim(cNum003))  .Or. (cNumPed $ Alltrim(cNum004)))
+				conout('Pedido LOOP em CNUM007: '+cNumPed)
+				Loop
+			EndIf
+
+			If cNumPed $ cNum008 // .Or. (cNumPed $ Alltrim(cNum002)) .Or. (cNumPed $ Alltrim(cNum003))  .Or. (cNumPed $ Alltrim(cNum004)))
+				conout('Pedido LOOP em CNUM008: '+cNumPed)
+				Loop
+			EndIf
+
+			If cNumPed $ cNum009 // .Or. (cNumPed $ Alltrim(cNum002)) .Or. (cNumPed $ Alltrim(cNum003))  .Or. (cNumPed $ Alltrim(cNum004)))
+				conout('Pedido LOOP em CNUM009: '+cNumPed)
+				Loop
+			EndIf
+
+			If cNumPed $ cNum010 // .Or. (cNumPed $ Alltrim(cNum002)) .Or. (cNumPed $ Alltrim(cNum003))  .Or. (cNumPed $ Alltrim(cNum004)))
+				conout('Pedido LOOP em CNUM010: '+cNumPed)
+				Loop
+			EndIf
+
+
+
+
 			/*
 			If cNum002 $ cNumPed
 				conout('Pedido LOOP em CNUM002: '+cNumPed)
@@ -335,6 +395,9 @@ if lXml
 				endif
 				MsUnlock()
 				//ferase(cArqNtx1 + OrdBagExt())
+
+
+
 			endif
 			
 			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
@@ -480,6 +543,36 @@ if lXml
 											else
 												TRBPEDD->C6_TES			:= "531"
 											endif
+////////////////////   PIX
+										_xtipo := Posicione("SB1",1,xFilial("SB1")+TRBPEDD->C6_PRODUTO,"B1_XTIPO")
+
+										if !empty(_xtipo)
+											//1=Liv ro;2=Curso;3=Outros;4=eBook                                                                                                
+											/*Seguem as TES criadas para a os pagamentos via PIX
+
+											Tipo de operação 17 TES 564 - para livros eletrônicos
+											Tipo de operação 17 TES 535 - para livros impresso
+											Tipo de operação P2 TES 523 - para Cursos e aplicativos.
+											*/
+
+												if upper(OXMLPED:PAYMENTDATA:TRANSACTIONS[1]:PAYMENTS[1]:GROUP) == 'INSTANTPAYMENT' .AND. (_xtipo == '1')
+
+													TRBPEDD->C6_TES			:= "535"
+
+												elseif upper(OXMLPED:PAYMENTDATA:TRANSACTIONS[1]:PAYMENTS[1]:GROUP) == 'INSTANTPAYMENT' .AND. ( _xtipo == '4')
+
+													TRBPEDD->C6_TES			:= "564"
+
+
+
+												elseIF upper(OXMLPED:PAYMENTDATA:TRANSACTIONS[1]:PAYMENTS[1]:GROUP) == 'INSTANTPAYMENT' .AND. (_xtipo == '2' .OR. _xtipo == '3')
+
+														TRBPEDD->C6_TES			:= "523"
+
+												endif
+										endif
+
+///////////////////
 										ENDIF
 										IF xRet7 > 0
 											if upper(OXMLPED:PAYMENTDATA:TRANSACTIONS[1]:PAYMENTS[1]:GROUP) == 'BANKINVOICE'                                           	
@@ -488,6 +581,32 @@ if lXml
 												TRBPEDD->C6_XOPER		:= "15"
 											endif
 										ENDIF
+
+										_xtipo := Posicione("SB1",1,xFilial("SB1")+TRBPEDD->C6_PRODUTO,"B1_XTIPO")
+
+										if !empty(_xtipo)
+
+
+												if upper(OXMLPED:PAYMENTDATA:TRANSACTIONS[1]:PAYMENTS[1]:GROUP) == 'INSTANTPAYMENT' .AND. (_xtipo == '1' .OR. _xtipo == '4')
+
+													TRBPEDD->C6_XOPER       := "17"	
+
+												elseIF upper(OXMLPED:PAYMENTDATA:TRANSACTIONS[1]:PAYMENTS[1]:GROUP) == 'INSTANTPAYMENT' .AND. (_xtipo == '2' .OR. _xtipo == '3')
+
+														TRBPEDD->C6_XOPER       := "P2"	
+
+												endif
+										endif
+
+
+
+
+////////////////     PIX
+
+
+
+
+
 										IF xRet8 > 0
 											TRBPEDD->C6_DESCRI			:= Posicione("SB1",1,XFILIAL("SB1")+TRBPEDD->C6_PRODUTO,"B1_DESC")
 										ENDIF
@@ -548,6 +667,29 @@ if lXml
 													else
 														TRBPEDD->C6_TES			:= "531"
 													endif
+///////PIX								
+										_xtipo := Posicione("SB1",1,xFilial("SB1")+TRBPEDD->C6_PRODUTO,"B1_XTIPO")
+
+										if !empty(_xtipo)
+
+
+												if upper(OXMLPED:PAYMENTDATA:TRANSACTIONS[1]:PAYMENTS[1]:GROUP) == 'INSTANTPAYMENT' .AND. (_xtipo == '1')
+
+													TRBPEDD->C6_TES			:= "535"
+
+												elseif upper(OXMLPED:PAYMENTDATA:TRANSACTIONS[1]:PAYMENTS[1]:GROUP) == 'INSTANTPAYMENT' .AND. ( _xtipo == '4')
+
+													TRBPEDD->C6_TES			:= "564"
+
+												elseIF upper(OXMLPED:PAYMENTDATA:TRANSACTIONS[1]:PAYMENTS[1]:GROUP) == 'INSTANTPAYMENT' .AND. (_xtipo == '2' .OR. _xtipo == '3')
+
+														TRBPEDD->C6_TES			:= "523"
+
+												endif
+										endif
+
+
+///////////
 												ENDIF
 												IF xRet7 > 0
 													if upper(OXMLPED:PAYMENTDATA:TRANSACTIONS[1]:PAYMENTS[1]:GROUP) == 'BANKINVOICE'
@@ -555,6 +697,27 @@ if lXml
 													else
 														TRBPEDD->C6_XOPER		:= "15"
 													endif
+
+													_xtipo := Posicione("SB1",1,xFilial("SB1")+TRBPEDD->C6_PRODUTO,"B1_XTIPO")
+
+													if !empty(_xtipo)
+
+
+														if upper(OXMLPED:PAYMENTDATA:TRANSACTIONS[1]:PAYMENTS[1]:GROUP) == 'INSTANTPAYMENT' .AND. (_xtipo == '1' .OR. _xtipo == '4')
+
+															TRBPEDD->C6_XOPER       := "17"	
+
+														elseIF upper(OXMLPED:PAYMENTDATA:TRANSACTIONS[1]:PAYMENTS[1]:GROUP) == 'INSTANTPAYMENT' .AND. (_xtipo == '2' .OR. _xtipo == '3')
+
+															TRBPEDD->C6_XOPER       := "P2"	
+
+														endif
+												endif
+
+
+
+
+
 												ENDIF
 												IF xRet8 > 0
 													TRBPEDD->C6_DESCRI			:= Posicione("SB1",1,XFILIAL("SB1")+TRBPEDD->C6_PRODUTO,"B1_DESC")
@@ -603,6 +766,36 @@ if lXml
 								endif
 								TRBPEDD->C6_UM				:= Posicione("SB1",1,XFILIAL("SB1")+Alltrim(TRBPEDD->C6_PRODUTO),"B1_UM")
 								TRBPEDD->C6_DESCRI			:= Posicione("SB1",1,XFILIAL("SB1")+Alltrim(TRBPEDD->C6_PRODUTO),"B1_DESC")
+
+										_xtipo := Posicione("SB1",1,xFilial("SB1")+TRBPEDD->C6_PRODUTO,"B1_XTIPO")
+
+										if !empty(_xtipo)
+											//1=Liv ro;2=Curso;3=Outros;4=eBook                                                                                                
+											/*Seguem as TES criadas para a os pagamentos via PIX
+
+											Tipo de operação 17 TES 564 - para livros eletrônicos
+											Tipo de operação 17 TES 535 - para livros impresso
+											Tipo de operação P2 TES 523 - para Cursos e aplicativos.
+											*/
+
+												if upper(OXMLPED:PAYMENTDATA:TRANSACTIONS[1]:PAYMENTS[1]:GROUP) == 'INSTANTPAYMENT' .AND. (_xtipo == '1')
+
+													TRBPEDD->C6_TES			:= "535"
+
+												elseif upper(OXMLPED:PAYMENTDATA:TRANSACTIONS[1]:PAYMENTS[1]:GROUP) == 'INSTANTPAYMENT' .AND. ( _xtipo == '4')
+
+													TRBPEDD->C6_TES			:= "564"
+
+
+
+												elseIF upper(OXMLPED:PAYMENTDATA:TRANSACTIONS[1]:PAYMENTS[1]:GROUP) == 'INSTANTPAYMENT' .AND. (_xtipo == '2' .OR. _xtipo == '3')
+
+														TRBPEDD->C6_TES			:= "523"
+
+												endif
+										endif
+
+
 								MsUnlock()
 								//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 								//³Regra para colocar o pedido para PAC pois o mesmo possui um livro e esse processo conforme Alexandre passou deve ser colocada PAC na transportadora³
@@ -693,7 +886,7 @@ if lXml
 								next Ix
 
 
-
+									nTotDiv := 0
 									for Ix := 1 to len(aValorOrig)
 										IF aValorOrig[ix][4] <> '1'
 									    	nTotDiv += 1
@@ -745,6 +938,37 @@ if lXml
 										  TRBPEDD->C6_VALOR		    := nXvlTot  * (Posicione("SB1",1,XFILIAL("SB1")+aValorOrig[ix][1],"B1_PRV1") / nXTotTab)
 										  TRBPEDD->C6_PRUNIT		:= nXvlTot  * (Posicione("SB1",1,XFILIAL("SB1")+aValorOrig[ix][1],"B1_PRV1") / nXTotTab)
 										Msunlock()
+
+										_xtipo := Posicione("SB1",1,xFilial("SB1")+TRBPEDD->C6_PRODUTO,"B1_XTIPO")
+
+										if !empty(_xtipo)
+
+												if upper(OXMLPED:PAYMENTDATA:TRANSACTIONS[1]:PAYMENTS[1]:GROUP) == 'INSTANTPAYMENT' .AND. (_xtipo == '1')
+												reclock("TRBPEDD",.F.)
+														TRBPEDD->C6_TES			:= "535"
+														TRBPEDD->C6_XOPER       := "17"	
+												msunlock()
+												elseif upper(OXMLPED:PAYMENTDATA:TRANSACTIONS[1]:PAYMENTS[1]:GROUP) == 'INSTANTPAYMENT' .AND. (_xtipo == '4')
+												reclock("TRBPEDD",.F.)
+														TRBPEDD->C6_TES			:= "564"
+														TRBPEDD->C6_XOPER       := "17"	
+												msunlock()
+
+
+												elseIF upper(OXMLPED:PAYMENTDATA:TRANSACTIONS[1]:PAYMENTS[1]:GROUP) == 'INSTANTPAYMENT' .AND. (_xtipo == '2' .OR. _xtipo == '3')
+												reclock("TRBPEDD",.F.)
+														TRBPEDD->C6_TES			:= "523"
+														TRBPEDD->C6_XOPER       := "P2"	
+													msunlock()
+												endif
+
+										endif
+
+
+
+
+
+
 								ENDIF
 
 								
@@ -779,6 +1003,8 @@ if lXml
 								lSeek := .T.
 							endif
 							xRet := ""
+
+
 							For nFor1 := 1 TO LEN(aCpos)
 								&("TRBPEDD->"+aCpos[nFor1][2]) := valtxp(xRet,&(aCpos[nFor1][1]),aCpos[nFor1][3],aCpos[nFor1][2],nFor1)
 							Next nFor1
@@ -794,6 +1020,32 @@ if lXml
 
 								TRBPEDD->UXU_PROQUE := 0
 							endif
+								_xtipo := Posicione("SB1",1,xFilial("SB1")+TRBPEDD->C6_PRODUTO,"B1_XTIPO")
+
+								if !empty(_xtipo)
+
+								if upper(OXMLPED:PAYMENTDATA:TRANSACTIONS[1]:PAYMENTS[1]:GROUP) == 'INSTANTPAYMENT' .AND. (_xtipo == '1')
+								reclock("TRBPEDD",.F.)
+										TRBPEDD->C6_TES			:= "535"
+										TRBPEDD->C6_XOPER       := "17"	
+								msunlock()
+								elseif upper(OXMLPED:PAYMENTDATA:TRANSACTIONS[1]:PAYMENTS[1]:GROUP) == 'INSTANTPAYMENT' .AND. (_xtipo == '4')
+								reclock("TRBPEDD",.F.)
+										TRBPEDD->C6_TES			:= "564"
+										TRBPEDD->C6_XOPER       := "17"	
+								msunlock()
+
+
+								elseIF upper(OXMLPED:PAYMENTDATA:TRANSACTIONS[1]:PAYMENTS[1]:GROUP) == 'INSTANTPAYMENT' .AND. (_xtipo == '2' .OR. _xtipo == '3')
+								reclock("TRBPEDD",.F.)
+										TRBPEDD->C6_TES			:= "523"
+										TRBPEDD->C6_XOPER       := "P2"	
+									msunlock()
+								endif
+
+								endif
+
+
 							MsUnlock()
 						ELSEIF valtype(OXMLPED:ITEMS[_X]:REFID) <> 'U'
 							xRet := ascan(aCpos,{|x| alltrim(x[2]) == "C6_VTEX" })
@@ -947,6 +1199,36 @@ endif
 
 //////////
 */
+
+
+		_xtipo := Posicione("SB1",1,xFilial("SB1")+TRBPEDD->C6_PRODUTO,"B1_XTIPO")
+
+		if !empty(_xtipo)
+
+		if upper(OXMLPED:PAYMENTDATA:TRANSACTIONS[1]:PAYMENTS[1]:GROUP) == 'INSTANTPAYMENT' .AND. (_xtipo == '1')
+		   reclock("TRBPEDD",.F.)
+				TRBPEDD->C6_TES			:= "535"
+				TRBPEDD->C6_XOPER       := "17"	
+		   msunlock()
+		elseif upper(OXMLPED:PAYMENTDATA:TRANSACTIONS[1]:PAYMENTS[1]:GROUP) == 'INSTANTPAYMENT' .AND. (_xtipo == '4')
+		   reclock("TRBPEDD",.F.)
+				TRBPEDD->C6_TES			:= "564"
+				TRBPEDD->C6_XOPER       := "17"	
+		   msunlock()
+
+
+		elseIF upper(OXMLPED:PAYMENTDATA:TRANSACTIONS[1]:PAYMENTS[1]:GROUP) == 'INSTANTPAYMENT' .AND. (_xtipo == '2' .OR. _xtipo == '3')
+		   reclock("TRBPEDD",.F.)
+				TRBPEDD->C6_TES			:= "523"
+				TRBPEDD->C6_XOPER       := "P2"	
+			msunlock()
+		endif
+
+		endif
+
+
+
+
 RETURN()
 /*
 ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ

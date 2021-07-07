@@ -206,20 +206,28 @@ User Function A010TOK()
 
 if inclui 
 	//mostra pergunta do parametro cMsg
-	If ApMsgNoYes(cMsg, cCaption)
+	//If ApMsgNoYes(cMsg, cCaption) pergunta retirada para quando o usuário confirmar o cadastro do produto, o mesmo já ser cadastrado nas demais filiais
 		//tabela com as informaçoes das filiais
 		DbSelectArea("SM0")
 			nRec := SM0->(Recno())
 			SM0->(dbGoTop())
 		While SM0->(!Eof())
 			//Filial da tabela é diferente da filial logada?
-			if SM0->M0_CODFIL <> cfilant
-				RecLock("SB1",.T.)
-				AvReplace("M","SB1")
-				//altero a filial do produto
-				SB1->B1_FILIAL = SM0->M0_CODFIL
-				//libero registro
-				SB1->(MsUnlock())
+			if alltrim(SM0->M0_CODFIL) <> cfilant
+			    cfilatu  := alltrim(SM0->M0_CODFIL)
+				DBSELECTAREA("SB1")
+				DBSETORDER(1)
+				DBGOTOP()
+
+				IF !DBSEEK(cfilatu + M->B1_COD)
+					RecLock("SB1",.T.)
+						AvReplace("M","SB1")
+						//altero a filial do produto
+//						SB1->B1_FILIAL = SM0->M0_CODFIL
+						SB1->B1_FILIAL = cfilatu
+						//libero registro
+					SB1->(MsUnlock())
+				ENDIF
 			endif
 		//proximo registro
 			SM0->(DbSkip())
@@ -227,7 +235,7 @@ if inclui
 			//libero registro
 			//SM0->(dbCloseArea()) COMENTA ESSA LINHA NÃO PODE FECHAR ESSA TABELA
 		SM0->(dbGoTo(nRec))
-	endif
+	//endif
 
 If Alltrim(SB1->B1_TIPO) <> "  "
 	dbSelectArea("SB2")

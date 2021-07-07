@@ -218,9 +218,9 @@ Funcao para efetuar o cadastro do Fornecedor
 /*/
 Static function CadNewFor(cIdFornec,cTipFor,cCgcFor,cCpfFor,nTipo)
 Local aVetor 	:= {}
-Local cMsgErro	:= "wallace.pereira@ethosx.com;wallace.pereira@ethosx.com"
-Local cEmAudit  := "anderson@manole.com.br;caio.meirelles@manole.com.br;wallace.pereira@ethosx.com;matheus@manole.com.br;"
-Local cEmResp	:= "anderson@manole.com.br;matheus@manole.com.br;financeiro.cr@manole.com.br;wallace.pereira@ethosx.com;"
+Local cMsgErro	:= "luis.balestrero@ethosx.com;luis.balestrero@ethosx.com"
+Local cEmAudit  := "anderson@manole.com.br;matheus@manole.com.br;luis.balestrero@ethosx.com;"
+Local cEmResp	:= "anderson@manole.com.br;financeiro.cr@manole.com.br;"
 Private lMsErroAuto := .F.
 
 //Preenche registros referente Tipo de Fornecedor					
@@ -321,13 +321,13 @@ If lMsErroAuto
 		cMsgErro += aErrPCAuto[nLoop]+ "<br>"
 	Next
 		
-	//U_LogFunction(cLogArquivo,cLogError,cLogProcesso)
+//	U_LogFunction(cLogArquivo,cLogError,cLogProcesso)
 						
-	//If Findfunction("u_FSENVMAIL")
-	//	u_FSENVMAIL("Log_Fornec",cLogError,cLogmail)
-	//EndIf	
+//	If Findfunction("u_FSENVMAIL")
+//		u_FSENVMAIL("Log_Fornec",cLogError,cLogmail)
+//	EndIf	
 						
-	ConOut("Cadastro de Fornecedor NAO EFETUADO !!! ")
+	ConOut("Cadastro de Fornecedor NAO EFETUADO ***!!! ")
 	ConOut(cMsgErro)
 
 	Conout("** CADFORN-001 - Enviando e-mail de Cadastro NÃO efetuado" + DtoC(Date()) + " - " + Time() + " **")
@@ -418,6 +418,8 @@ Local lOk			:= .F.
 Local cError
 Local cMailConta	:= "acertos@manole.com.br"				//Alltrim(GetMv("MN_CSGCONT"))
 Local cMailSenha	:= "@c3rt05!+" 							//Alltrim(GetMv("MN_CSGSENH"))
+//Local cMailSenha	:= "wegksmehdrfrfevf"					//Alltrim(GetMv("MN_CSGSENH"))
+
 Local cMailServer	:= "smtp.gmail.com:587"					//Alltrim(GetMv("MN_CSGSERV"))
 local nRelTime 	    := 300									//GetMv("MN_CSGTIME")	//300	
 Local lSSL	        := .T.									//GetMv("MN_CSGSSL")	//.T. 

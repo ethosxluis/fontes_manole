@@ -15,13 +15,20 @@
 ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
 */
 
-USER FUNCTION M460IREN()
+USER FUNCTION M460IREN'()
 Local IRRF	:= paramixb
 Local aArea	:= SC5->(GETAREA())
 IF SC5->(DBSeek(xFilial("SC5")+SE1->E1_PEDIDO)) .AND. !EMPTY(SC5->C5_PGVTTID)
 	SE1->E1_PGVTTID	:= SC5->C5_PGVTTID
 	SE1->E1_NOSSVTX	:= SC5->C5_NOSSONU
 ENDIF
+
+IF SC5->(DBSeek(xFilial("SC5")+SE1->E1_PEDIDO)) .AND. !EMPTY(SC5->C5_XNSUTEF)
+	SE1->E1_NSUTEF 	:= SC5->C5_XNSUTEF
+ENDIF
+
+
+
 RESTAREA(aArea)
 RETURN(IRRF)
 
